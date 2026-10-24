@@ -20,9 +20,13 @@ export class InputLatch {
     this.held.delete(action);
   }
 
-  /** Lets go of everything, for when the window loses focus mid-press. */
+  /**
+   * Lets go of everything, for when the window loses focus mid-press. Pending
+   * presses go too, so a key pressed just before the blur does not fire after it.
+   */
   releaseAll(): void {
     this.held.clear();
+    this.pressed.clear();
   }
 
   /** The input for the next step. Clears the presses it returns. */

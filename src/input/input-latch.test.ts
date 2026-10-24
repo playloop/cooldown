@@ -24,10 +24,18 @@ describe('InputLatch', () => {
     expect(latch.take().jumpPressed).toBe(false);
   });
 
-  it('releases everything when focus is lost', () => {
+  it('releases everything when focus is lost, including presses not yet taken', () => {
     const latch = new InputLatch();
     latch.down('right');
+    latch.down('jump');
+    latch.down('dash');
     latch.releaseAll();
-    expect(latch.take().right).toBe(false);
+    expect(latch.take()).toEqual({
+      left: false,
+      right: false,
+      jumpHeld: false,
+      jumpPressed: false,
+      dashPressed: false,
+    });
   });
 });
