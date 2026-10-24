@@ -8,6 +8,7 @@ const UNIFORMS = [
   'uRoomSeed',
   'uSolids',
   'uSolidCount',
+  'uIce', 'uIceCount', 'uPickups', 'uPickupCount', 'uSeekers', 'uTargets', 'uSeekerCount', 'uDashReady',
   'uSpikes',
   'uSpikeCount',
   'uStreaks',
@@ -52,6 +53,14 @@ export class Renderer {
     gl.uniform1f(u.uRoomSeed, frame.roomSeed);
     gl.uniform4fv(u.uSolids, frame.solids);
     gl.uniform1i(u.uSolidCount, frame.solidCount);
+    gl.uniform4fv(u.uIce, frame.ice);
+    gl.uniform1i(u.uIceCount, frame.iceCount);
+    gl.uniform2fv(u.uPickups, frame.pickups);
+    gl.uniform1i(u.uPickupCount, frame.pickupCount);
+    gl.uniform4fv(u.uSeekers, frame.seekers);
+    gl.uniform2fv(u.uTargets, frame.targets);
+    gl.uniform1i(u.uSeekerCount, frame.seekerCount);
+    gl.uniform1f(u.uDashReady, frame.dashReady);
     gl.uniform4fv(u.uSpikes, frame.spikes);
     gl.uniform1i(u.uSpikeCount, frame.spikeCount);
     gl.uniform4fv(u.uStreaks, frame.streaks);

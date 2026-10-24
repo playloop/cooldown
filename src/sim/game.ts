@@ -1,5 +1,5 @@
 import { DEATH, RUN, STREAK } from '../config';
-import { overlaps } from '../core/rect';
+import { overlaps, type Rect } from '../core/rect';
 import type { GameEvent } from '../events/game-events';
 import type { Point, Room } from '../world/room';
 import { deathCheck, type DeathCause } from './death';
@@ -8,6 +8,9 @@ import { bodyOf, spawnPlayer, type Player } from './player';
 import { stepPlayer } from './step-player';
 import type { Streak } from './streak';
 import { updateStreaks } from './streak-list';
+import { makeIce } from './ice';
+import { collectRefills } from './pickups';
+import { spawnSeekers, stepSeekers, type Seeker } from './seeker';
 
 export type Phase =
   | { readonly kind: 'playing' }
@@ -23,6 +26,9 @@ export interface GameState {
   readonly room: number;
   readonly player: Player;
   readonly streaks: readonly Streak[];
+  readonly ice: readonly Rect[];
+  readonly pickups: readonly Point[];
+  readonly seekers: readonly Seeker[];
   /** Seconds since the game loaded. Drives streak heat and the shader's motion. */
   readonly clock: number;
   /** The run timer starts on the first input, not on page load. */
@@ -41,9 +47,7 @@ export interface StepResult {
 export function newGame(rooms: readonly Room[], startRoom = 0, clock = 0): GameState {
   return {
     phase: { kind: 'playing' },
-    room: startRoom,
-    player: spawnPlayer(roomAt(rooms, startRoom).spawn),
-    streaks: [],
+    ...respawnIn(rooms, startRoom),
     clock,
     started: false,
     runTime: 0,
@@ -89,10 +93,14 @@ function stepPlaying(
 
   const room = roomAt(rooms, next.room);
   const before = next.player;
-  const { player, dashStarted } = stepPlayer(before, input, dt, room, next.streaks, next.clock);
+  const moved = stepPlayer(before, input, dt, room, next.streaks, next.clock, next.ice);
+  const { player, pickups } = collectRefills(moved.player, next.pickups);
+  const { dashStarted, ice } = moved;
   const streaks = updateStreaks(next.streaks, before, player, dashStarted, next.clock, STREAK.lifetime);
-  next = { ...next, player, streaks };
+  const threats = stepSeekers(next.seekers, streaks, [...room.solids, ...ice], next.clock, dt, before, player);
+  next = { ...next, player, streaks, ice, pickups, seekers: threats.seekers };
 
+  if (threats.hit) return die(next, 'killed_by_seeker', events);
   const cause = deathCheck(player, room);
   if (cause !== null) return die(next, cause, events);
   if (overlaps(bodyOf(player), room.exit)) return leaveRoom(next, rooms, events);
@@ -139,8 +147,10 @@ function stepCleared(
   return { state: restart ? newGame(rooms, 0, state.clock) : state, events: [] };
 }
 
-function respawnIn(rooms: readonly Room[], room: number): Pick<GameState, 'room' | 'player' | 'streaks'> {
-  return { room, player: spawnPlayer(roomAt(rooms, room).spawn), streaks: [] };
+function respawnIn(rooms: readonly Room[], room: number): Pick<GameState, 'room' | 'player' | 'streaks' | 'ice' | 'pickups' | 'seekers'> {
+  const data = roomAt(rooms, room);
+  return { room, player: spawnPlayer(data.spawn), streaks: [], ice: makeIce(data.ice ?? []),
+    pickups: [...data.pickups ?? []], seekers: spawnSeekers(data.seekers ?? []) };
 }
 
 function roomEntered(room: number, rooms: readonly Room[]): GameEvent {

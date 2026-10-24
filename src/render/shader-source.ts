@@ -1,4 +1,4 @@
-import { PLAYER, SPIKES, STREAK, WORLD } from '../config';
+import { PLAYER, REFILL, SEEKER, SPIKES, STREAK, WORLD } from '../config';
 import { LIMITS } from './scene-frame';
 import colorGlsl from './shaders/color.glsl?raw';
 import runnerGlsl from './shaders/runner.glsl?raw';
@@ -18,6 +18,9 @@ const FLOAT_DEFINES: Readonly<Record<string, number>> = {
   PLAYER_HALF_H: PLAYER.halfHeight,
   SPIKE_H: SPIKES.height,
   STREAK_THICKNESS: STREAK.thickness,
+  REFILL_RADIUS: REFILL.radius,
+  SEEKER_RADIUS: SEEKER.radius,
+  SEEKER_WINDUP: SEEKER.windup,
 };
 
 /** Array sizes, which GLSL requires to be integer constants. */
@@ -26,6 +29,9 @@ const INT_DEFINES: Readonly<Record<string, number>> = {
   MAX_SPIKES: LIMITS.spikes,
   MAX_STREAKS: LIMITS.streaks,
   MAX_MARKS: LIMITS.marks,
+  MAX_ICE: LIMITS.ice,
+  MAX_PICKUPS: LIMITS.pickups,
+  MAX_SEEKERS: LIMITS.seekers,
 };
 
 /** GLSL reads 18 as an int, so a float constant must be written 18.0. */

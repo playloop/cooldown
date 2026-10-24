@@ -1,4 +1,5 @@
-import { DASH, DEATH, SPIKES, STREAK } from '../config';
+import { DASH, DEATH, ICE, REFILL, SEEKER, SPIKES, STREAK } from '../config';
+import { iceRects } from '../sim/ice';
 import type { Rect } from '../core/rect';
 import type { GameState } from '../sim/game';
 import { endHeats } from '../sim/streak';
@@ -10,6 +11,9 @@ export const LIMITS = {
   spikes: 8,
   streaks: STREAK.maxAlive,
   marks: 8,
+  ice: ICE.maxRects,
+  pickups: REFILL.max,
+  seekers: SEEKER.max,
 } as const;
 
 /** How fast the legs cycle while running, in radians per second. */
@@ -27,10 +31,18 @@ export class SceneFrame {
   roomSeed = 0;
   readonly solids = new Float32Array(LIMITS.solids * 4);
   solidCount = 0;
+  readonly ice = new Float32Array(LIMITS.ice * 4);
+  iceCount = 0;
+  readonly pickups = new Float32Array(LIMITS.pickups * 2);
+  pickupCount = 0;
+  readonly seekers = new Float32Array(LIMITS.seekers * 4);
+  readonly targets = new Float32Array(LIMITS.seekers * 2);
+  seekerCount = 0;
+  dashReady = 1;
   /** Per row: x0, x1, baseY, spike count. */
   readonly spikes = new Float32Array(LIMITS.spikes * 4);
   spikeCount = 0;
-  /** Per streak: startX, endX, top y, unused. */
+  /** Per streak: startX, endX, startY, endY. */
   readonly streaks = new Float32Array(LIMITS.streaks * 4);
   /** Per streak: unclamped heat at startX and at endX. */
   readonly streakHeat = new Float32Array(LIMITS.streaks * 2);
@@ -53,6 +65,18 @@ export class SceneFrame {
     this.time = state.clock;
     this.roomSeed = state.room;
     this.solidCount = packRects(this.solids, room.solids, LIMITS.solids, 'solids');
+    this.iceCount = packRects(this.ice, iceRects(state.ice), LIMITS.ice, 'ice runs');
+    assertFits(state.pickups.length, LIMITS.pickups, 'pickups');
+    this.pickupCount = state.pickups.length;
+    state.pickups.forEach((p, i) => { this.pickups.set([p.x, p.y], i * 2); });
+    assertFits(state.seekers.length, LIMITS.seekers, 'seekers');
+    this.seekerCount = state.seekers.length;
+    state.seekers.forEach((s, i) => {
+      const mode = { waiting: 0, windup: 1, charge: 2, recover: 3 }[s.mode];
+      this.seekers.set([s.x, s.y, mode, s.timer], i * 4);
+      this.targets.set([s.target.x, s.target.y], i * 2);
+    });
+    this.dashReady = state.player.canDash ? 1 : 0;
     this.packSpikes(room);
     this.packStreaks(state);
     this.packMarks(state);
@@ -71,7 +95,7 @@ export class SceneFrame {
 
   private packStreaks(state: GameState): void {
     state.streaks.forEach((streak, i) => {
-      this.streaks.set([streak.startX, streak.endX, streak.y, 0], i * 4);
+      this.streaks.set([streak.startX, streak.endX, streak.y, streak.endY], i * 4);
       this.streakHeat.set(endHeats(streak, state.clock), i * 2);
     });
     this.streakCount = state.streaks.length;

@@ -9,6 +9,14 @@ uniform float uTime;
 uniform float uRoomSeed;
 uniform vec4 uSolids[MAX_SOLIDS];
 uniform int uSolidCount;
+uniform vec4 uIce[MAX_ICE];
+uniform int uIceCount;
+uniform vec2 uPickups[MAX_PICKUPS];
+uniform int uPickupCount;
+uniform vec4 uSeekers[MAX_SEEKERS];
+uniform vec2 uTargets[MAX_SEEKERS];
+uniform int uSeekerCount;
+uniform float uDashReady;
 uniform vec4 uSpikes[MAX_SPIKES];
 uniform int uSpikeCount;
 uniform vec4 uStreaks[MAX_STREAKS];
@@ -119,16 +127,63 @@ float markHeat(float h, vec2 p, float px) {
 float streakHeat(float h, vec2 p, float px) {
   for (int i = 0; i < uStreakCount; i++) {
     vec4 s = uStreaks[i];
-    float x0 = min(s.x, s.y), x1 = max(s.x, s.y);
-    float along = abs(s.y - s.x) < 1e-4 ? 1.0 : (clamp(p.x, x0, x1) - s.x) / (s.y - s.x);
+    vec2 a = vec2(s.x, s.z), b = vec2(s.y, s.w);
+    vec2 delta = b - a;
+    float len2 = dot(delta, delta);
+    float along = len2 < 1e-6 ? 1.0 : clamp(dot(p - a, delta) / len2, 0.0, 1.0);
     float heat = clamp(mix(uStreakHeat[i].x, uStreakHeat[i].y, along), 0.0, 1.0);
-    vec2 center = vec2(0.5 * (x0 + x1), s.z - 0.5 * STREAK_THICKNESS);
-    vec2 halfSize = vec2(0.5 * (x1 - x0) + 0.18, 0.5 * STREAK_THICKNESS);
-    float d = sdRoundBox(p - center, halfSize, 0.16);
+    vec2 line = mix(a, b, along) - vec2(0.0, STREAK_THICKNESS * 0.5);
+    float d = length(p - line) - STREAK_THICKNESS * 0.5;
     float solid = step(1e-4, heat);
     h = mix(h, 0.18 + 0.82 * heat, fill(d, px) * solid);
     h += 0.55 * heat * exp(-max(d, 0.0) * 2.6) * solid;
     h += (1.0 - solid) * 0.05 * exp(-abs(d) * 14.0);
+  }
+  return h;
+}
+
+// Frosted ice has a cold interior and a fine faceted rim; carved holes share
+// exactly the remaining cell geometry used by collision.
+float iceHeat(float h, vec2 p, float px) {
+  float d = 1e5;
+  for (int i = 0; i < uIceCount; i++) d = min(d, sdBox(p - uIce[i].xy, uIce[i].zw));
+  float facets = abs(sin(p.x * 5.0 + p.y * 3.0)) * abs(sin(p.y * 4.0 - p.x));
+  h = mix(h, 0.12 + 0.13 * facets, fill(d, px));
+  return h + 0.23 * exp(-abs(d) * 18.0);
+}
+
+// Hollow pulsing diamonds distinguish dash refills from solid hazards.
+float pickupHeat(float h, vec2 p, float px) {
+  for (int i = 0; i < uPickupCount; i++) {
+    vec2 q = p - uPickups[i];
+    float d = (abs(q.x) + abs(q.y) - REFILL_RADIUS) * 0.7071068;
+    float rim = abs(d) - 0.045;
+    h += 0.22 * exp(-max(d, 0.0) * 3.0);
+    h = mix(h, 0.96, fill(rim, px));
+    h = max(h, (0.65 + 0.15 * sin(uTime * 4.0)) * fill(sdCircle(q, 0.14), px));
+  }
+  return h;
+}
+
+// A pointed shell, a visible lock line, and a contracting target ring make
+// charge direction and the remaining windup visible without relying on color.
+float seekerHeat(float h, vec2 p, float px) {
+  for (int i = 0; i < uSeekerCount; i++) {
+    vec4 s = uSeekers[i];
+    vec2 q = p - s.xy;
+    float d = (abs(q.x) + abs(q.y) - SEEKER_RADIUS * 1.4) * 0.7071068;
+    float recovering = step(2.5, s.z);
+    float core = mix(0.8, 0.28, recovering);
+    h = mix(h, core, fill(d, px));
+    h += (1.0 - recovering) * 0.2 * exp(-max(d, 0.0) * 4.0);
+    h = mix(h, 0.04, fill(sdBox(q, vec2(0.23, 0.055)), px));
+    if (s.z > 0.5 && s.z < 2.5) {
+      float line = sdSegment(p, s.xy, uTargets[i]);
+      float dashed = step(0.4, fract(length(p - s.xy) * 1.5 - uTime * 1.5));
+      h = max(h, 0.68 * fill(line - 0.025, px) * dashed);
+      float radius = s.z < 1.5 ? 0.25 + 0.6 * s.w / SEEKER_WINDUP : 0.25;
+      h = max(h, 0.94 * fill(abs(length(p - uTargets[i]) - radius) - 0.035, px));
+    }
   }
   return h;
 }
@@ -145,7 +200,7 @@ float runnerHeat(float h, vec2 p, float px) {
   }
   h += 0.35 * exp(-max(d, 0.0) * 2.2);
   h = mix(h, 0.97, fill(d, px));
-  return mix(h, 0.62, fill(sdVisor(q, facing), px));
+  return mix(h, mix(0.2, 0.8, uDashReady), fill(sdVisor(q, facing), px));
 }
 
 // Death: a hot ring and sparks flying out.
@@ -190,10 +245,13 @@ void main() {
   float h = airHeat(p);
   h = backdropHeat(h, p, px);
   h = groundHeat(h, p, px);
+  h = iceHeat(h, p, px);
   h = spikeHeat(h, p, px);
   h = exitHeat(h, p, px);
   h = markHeat(h, p, px);
   h = streakHeat(h, p, px);
+  h = pickupHeat(h, p, px);
+  h = seekerHeat(h, p, px);
   if (uPlayerVisible > 0.5) h = runnerHeat(h, p, px);
   if (uBurst.w > 0.5) h = burstHeat(h, p);
   vec2 uv = gl_FragCoord.xy / uRes;
