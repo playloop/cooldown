@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cooldown</title>
+  </head>
+  <body>
+    <main class="stage">
+      <canvas id="screen" width="1280" height="720" aria-label="Cooldown, a platformer"></canvas>
+      <div class="hud">
+        <span id="hud-room"></span>
+        <span id="hud-deaths"></span>
+        <span id="hud-time"></span>
+      </div>
+      <section id="title" class="card">
+        <h1>COOLDOWN</h1>
+        <p>Dash in the air to leave a white-hot streak.<br />Stand on it before it cools.</p>
+        <p class="keys">
+          <span><kbd>Arrows</kbd> <kbd>A</kbd> <kbd>D</kbd> move</span>
+          <span><kbd>Space</kbd> <kbd>Z</kbd> jump</span>
+          <span><kbd>X</kbd> <kbd>Shift</kbd> dash</span>
+        </p>
+        <p class="hint">Move to start</p>
+      </section>
+      <section id="cleared" class="card" hidden>
+        <h1>CLEARED</h1>
+        <p id="cleared-stats"></p>
+        <p class="hint">Press jump to run it again</p>
+      </section>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
