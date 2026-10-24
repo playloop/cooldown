@@ -1,5 +1,17 @@
 # Release notes
 
+## 0.2.2
+
+### Title
+
+Ten rooms and a clearer jump sound
+
+### Body
+
+- Explore ten rooms with ice carving, dash refills, diagonal dashes, and seekers.
+- Jumps now use one short takeoff sound.
+- Music and effects have separate volume controls. Press M to mute.
+
 ## 0.2.1
 
 ### Title
