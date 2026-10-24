@@ -46,3 +46,20 @@ One job: check the death arrived, with its cause, from inside the agent.
 ```text
 Use the Playloop MCP to find the newest Cooldown session and tell me how the runner died.
 ```
+
+## Prompt 4: the SDF beat
+
+One job: draw something small in the game's own look. Each death already leaves a warm mark; make
+it a flame, built from two published shapes melted together.
+
+```text
+Make the death marks small flames instead of round glows. In markHeat in src/render/shaders/scene.frag, build each mark from sdCircle and sdTriangleIsosceles in src/render/shaders/sdf.glsl, joined with smin, point up, with a slow flicker from uTime. It still only adds heat, so the colormap does the color, it stays inside the uMarkCount loop, and nothing outside src/render changes. Then run npm run check.
+```
+
+## Prompt 5: commit it
+
+```text
+Commit this as one commit. Stage only the files you changed and write a plain one-line message.
+```
+
+Then die a few times at the gap and look at the marks.
