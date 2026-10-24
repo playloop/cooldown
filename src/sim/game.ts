@@ -100,9 +100,7 @@ function stepPlaying(
   const player: Player = {
     ...afterMove,
     canDash: afterMove.canDash || moved.support === 'ground',
-    droppedByCooling: landed
-      ? false
-      : before.droppedByCooling || droppedByCooling(before, afterMove, s.streaks),
+    fallBlame: landed ? null : (before.fallBlame ?? (droppedByCooling(before, afterMove, s.streaks) ? 'streak_cooled' : null)),
   };
   s = { ...s, player, streaks: updateStreaks(s.streaks, before, player, dashStarted, s.clock, STREAK.lifetime) };
 

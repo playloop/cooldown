@@ -1,6 +1,7 @@
 import { PLAYER } from '../config';
 import { boxAround, type Rect } from '../core/rect';
 import type { Point } from '../world/room';
+import type { DeathCause } from './death';
 
 /** What the runner is standing on, if anything. */
 export type Support = 'ground' | 'streak' | null;
@@ -22,10 +23,11 @@ export interface Player {
   /** One dash per trip through the air. Only solid ground gives it back, never a streak. */
   readonly canDash: boolean;
   /**
-   * Set when the streak under the runner cooled away and dropped them. Cleared on
-   * landing. A death while it is set is a `streak_cooled` death, not a spikes death.
+   * Who to blame if this fall ends in a hazard: set when something drops the
+   * runner (a streak cooling away under it gives `streak_cooled`), cleared on
+   * landing. Null means a fall the runner chose, so the hazard itself is the cause.
    */
-  readonly droppedByCooling: boolean;
+  readonly fallBlame: DeathCause | null;
 }
 
 export function spawnPlayer(feet: Point): Player {
@@ -40,7 +42,7 @@ export function spawnPlayer(feet: Point): Player {
     jumpBuffer: 0,
     dashTime: 0,
     canDash: true,
-    droppedByCooling: false,
+    fallBlame: null,
   };
 }
 

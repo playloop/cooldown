@@ -9,7 +9,7 @@ import { fullSpan, type Streak } from './streak';
  * Why the runner died. These strings are the contract with anything that
  * records deaths, so a new way to die gets a new cause, never a reused one.
  */
-export type DeathCause = 'spikes' | 'streak_cooled';
+export type DeathCause = 'spikes' | 'streak_cooled' | 'fell_out';
 
 /** The deadly part of a spike row: full width, but shorter than the drawn spikes. */
 export function spikeHitbox(row: SpikeRow): Rect {
@@ -35,12 +35,36 @@ export function droppedByCooling(
   });
 }
 
+/** Something in a room that kills on contact. */
+interface Hazard {
+  /** The cause reported when nothing earlier is to blame. */
+  readonly cause: DeathCause;
+  /**
+   * True for hazards you only reach by falling. If something dropped the
+   * runner (a streak cooling under it), that takes the blame instead.
+   */
+  readonly reachedByFalling: boolean;
+  readonly touches: (p: Player, room: Room) => boolean;
+}
+
+/** Checked in order; the first one touched is the one that killed. */
+const HAZARDS: readonly Hazard[] = [
+  {
+    cause: 'spikes',
+    reachedByFalling: true,
+    touches: (p, room) => room.spikes.some((row) => overlaps(bodyOf(p), spikeHitbox(row))),
+  },
+  {
+    // The room tests prove every floor is closed, so this only fires for a broken room.
+    cause: 'fell_out',
+    reachedByFalling: true,
+    touches: (p) => feetY(p) < WORLD.killY,
+  },
+];
+
 /** The cause of death if the runner is dying this step, otherwise null. */
 export function deathCheck(p: Player, room: Room): DeathCause | null {
-  const body = bodyOf(p);
-  const hitSpikes = room.spikes.some((row) => overlaps(body, spikeHitbox(row)));
-  // A safety net only: the room tests prove every pit is lined with spikes.
-  const fellOut = feetY(p) < WORLD.killY;
-  if (!hitSpikes && !fellOut) return null;
-  return p.droppedByCooling ? 'streak_cooled' : 'spikes';
+  const hazard = HAZARDS.find((h) => h.touches(p, room));
+  if (hazard === undefined) return null;
+  return hazard.reachedByFalling && p.fallBlame !== null ? p.fallBlame : hazard.cause;
 }

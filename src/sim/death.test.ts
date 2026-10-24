@@ -36,11 +36,15 @@ describe('deathCheck', () => {
   });
 
   it('blames the streak when a cooled streak dropped the runner', () => {
-    expect(deathCheck(at(12, 1.2, { droppedByCooling: true }), room)).toBe('streak_cooled');
+    expect(deathCheck(at(12, 1.2, { fallBlame: 'streak_cooled' }), room)).toBe('streak_cooled');
   });
 
-  it('catches a fall out of the bottom of the room', () => {
-    expect(deathCheck(at(5, WORLD.killY - 0.1), room)).toBe('spikes');
+  it('reports a fall out of the bottom of the room as its own cause', () => {
+    expect(deathCheck(at(5, WORLD.killY - 0.1), room)).toBe('fell_out');
+  });
+
+  it('blames the streak for a fall out of the room it caused', () => {
+    expect(deathCheck(at(5, WORLD.killY - 0.1, { fallBlame: 'streak_cooled' }), room)).toBe('streak_cooled');
   });
 });
 

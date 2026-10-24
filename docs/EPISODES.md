@@ -18,8 +18,9 @@ including every MCP read, works on the free plan.
 ## 1. Put the SDK in and count the deaths
 
 - **The game gains:** the Playloop TypeScript SDK, subscribed to the event bus.
-  `player_died` goes out with its cause (`spikes` or `streak_cooled`), room and
-  position. The simulation does not change at all.
+  `player_died` goes out with its cause (`spikes`, `streak_cooled`, or
+  `fell_out`, which only a broken room can produce), room and position. The
+  simulation does not change at all.
 - **Playloop measures it with:** `client.telemetry.track`, then `list_sessions`,
   `get_session` and `get_event_stats` to see the deaths arrive.
 - **Shader beat:** none. The point is that analytics plugs into a seam, not
