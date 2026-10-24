@@ -63,3 +63,17 @@ Commit this as one commit. Stage only the files you changed and write a plain on
 ```
 
 Then die a few times at the gap and look at the marks.
+
+## Off camera
+
+These landed during the episode without a prompt on screen. They are in
+`ep01-end`, so a diff against your own run will show them:
+
+- `c403b23` asks agents to keep em dashes out of their replies (the repo is
+  built on camera).
+- `e83fb60` adds `?debug&native`, which renders at the screen's real resolution
+  for recording.
+- `47e3538` makes built copies report the `production` environment and the
+  build version, so real players' sessions from the itch.io build show up in
+  Playloop's build and fix-first reads (the SDK defaults to `dev`).
+

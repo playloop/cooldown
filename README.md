@@ -15,6 +15,20 @@ npm run dev
 
 Arrows or A/D to move, Space or Z to jump, X or Shift to dash.
 
+## Follow along
+
+Every episode has two tags. Start from the first, run that episode's prompts
+in Claude Code, and compare what you get with the second:
+
+```bash
+git checkout ep01-start            # the game before the episode
+# run prompts/01-put-the-sdk-in.md, one prompt at a time
+git diff ep01-start ep01-end       # what the episode changed
+```
+
+Your agent will not write exactly the same code, and that is fine. The end tag
+also holds the few small changes made off camera; each prompts file lists them.
+
 ## Work on it
 
 ```bash
