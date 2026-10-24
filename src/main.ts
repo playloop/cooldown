@@ -60,8 +60,14 @@ let state = newGame(ROOMS, options.startRoom);
 // Every GameEvent goes to Playloop as telemetry. track() only buffers; the
 // batch timer sends, and the SDK flushes the last batch when the page hides.
 // Without a key the client is inert, so the game runs the same either way.
-const playloop = new Playloop({ apiKey: import.meta.env.VITE_PLAYLOOP_INGEST_KEY ?? '' });
-playloop.telemetry.startSession({ runner: 'browser' });
+// A built copy is what players get, so it reports as production (the
+// environment Playloop's build and fix-first reads look at by default) and
+// tags each session with the build version so builds can be compared.
+const playloop = new Playloop({
+  apiKey: import.meta.env.VITE_PLAYLOOP_INGEST_KEY ?? '',
+  environment: import.meta.env.PROD ? 'production' : 'dev',
+});
+playloop.telemetry.startSession({ runner: 'browser', gameVersion: __BUILD_VERSION__ });
 playloop.telemetry.autoBatch();
 sendToTelemetry(bus, playloop.telemetry);
 if (options.enabled) exposeDebug(window, bus, () => state);
