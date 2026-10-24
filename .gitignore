@@ -6,3 +6,6 @@ coverage/
 
 # The real denylist is machine-local: a list of secrets is itself a secret.
 .githooks/denylist.local
+
+# Vite env files hold keys (the Playloop ingest key goes in .env.local).
+*.local
