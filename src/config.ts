@@ -57,6 +57,11 @@ export const SPIKES = {
   hitHeight: 0.45,
 } as const;
 
+export const RUN = {
+  /** Seconds on the cleared screen before a jump press starts a new run, so a held jump does not skip it. */
+  restartGuard: 0.5,
+} as const;
+
 export const DEATH = {
   /** Seconds between dying and respawning (the burst plays in this window). */
   respawnDelay: 0.7,

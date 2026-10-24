@@ -1,14 +1,13 @@
-import { DEATH, STREAK } from '../config';
+import { DEATH, RUN, STREAK } from '../config';
 import { overlaps } from '../core/rect';
 import type { GameEvent } from '../events/game-events';
 import type { Point, Room } from '../world/room';
-import { moveAndCollide } from './collision';
-import { deathCheck, droppedByCooling, type DeathCause } from './death';
+import { deathCheck, type DeathCause } from './death';
 import { isActive, type InputFrame } from './input-frame';
-import { applyControls } from './movement';
 import { bodyOf, spawnPlayer, type Player } from './player';
+import { stepPlayer } from './step-player';
 import type { Streak } from './streak';
-import { platformsOf, updateStreaks } from './streak-list';
+import { updateStreaks } from './streak-list';
 
 export type Phase =
   | { readonly kind: 'playing' }
@@ -38,9 +37,6 @@ export interface StepResult {
   readonly state: GameState;
   readonly events: readonly GameEvent[];
 }
-
-/** Seconds on the cleared screen before a jump press starts a new run. */
-const RESTART_GUARD = 0.5;
 
 export function newGame(rooms: readonly Room[], startRoom = 0, clock = 0): GameState {
   return {
@@ -85,70 +81,62 @@ function stepPlaying(
   rooms: readonly Room[],
 ): StepResult {
   const events: GameEvent[] = [];
-  let s = state;
-  if (!s.started && isActive(input)) {
-    s = { ...s, started: true };
-    events.push({ type: 'run_started' }, roomEntered(s.room, rooms));
+  let next = state;
+  if (!next.started && isActive(input)) {
+    next = { ...next, started: true };
+    events.push({ type: 'run_started' }, roomEntered(next.room, rooms));
   }
 
-  const room = roomAt(rooms, s.room);
-  const before = s.player;
-  const { player: controlled, dashStarted } = applyControls(before, input, dt);
-  const moved = moveAndCollide(controlled, dt, room.solids, platformsOf(s.streaks, s.clock));
-  const landed = moved.support !== null;
-  const afterMove: Player = { ...controlled, ...moved };
-  const player: Player = {
-    ...afterMove,
-    canDash: afterMove.canDash || moved.support === 'ground',
-    fallBlame: landed ? null : (before.fallBlame ?? (droppedByCooling(before, afterMove, s.streaks) ? 'streak_cooled' : null)),
-  };
-  s = { ...s, player, streaks: updateStreaks(s.streaks, before, player, dashStarted, s.clock, STREAK.lifetime) };
+  const room = roomAt(rooms, next.room);
+  const before = next.player;
+  const { player, dashStarted } = stepPlayer(before, input, dt, room, next.streaks, next.clock);
+  const streaks = updateStreaks(next.streaks, before, player, dashStarted, next.clock, STREAK.lifetime);
+  next = { ...next, player, streaks };
 
   const cause = deathCheck(player, room);
-  if (cause !== null) return die(s, cause, events);
-
-  if (overlaps(bodyOf(player), room.exit)) return leaveRoom(s, rooms, events);
-  return { state: s, events };
+  if (cause !== null) return die(next, cause, events);
+  if (overlaps(bodyOf(player), room.exit)) return leaveRoom(next, rooms, events);
+  return { state: next, events };
 }
 
-function die(s: GameState, cause: DeathCause, events: GameEvent[]): StepResult {
-  const at = { x: s.player.x, y: s.player.y };
-  const mark: DeathMark = { ...at, room: s.room };
-  events.push({ type: 'player_died', room: s.room, cause, ...at, runTime: s.runTime });
+function die(state: GameState, cause: DeathCause, events: GameEvent[]): StepResult {
+  const at = { x: state.player.x, y: state.player.y };
+  const mark: DeathMark = { ...at, room: state.room };
+  events.push({ type: 'player_died', room: state.room, cause, ...at, runTime: state.runTime });
   return {
     state: {
-      ...s,
-      phase: { kind: 'dying', since: s.clock, at, cause },
-      deaths: s.deaths + 1,
-      marks: [...s.marks, mark].slice(-DEATH.maxMarks),
+      ...state,
+      phase: { kind: 'dying', since: state.clock, at, cause },
+      deaths: state.deaths + 1,
+      marks: [...state.marks, mark].slice(-DEATH.maxMarks),
     },
     events,
   };
 }
 
-function leaveRoom(s: GameState, rooms: readonly Room[], events: GameEvent[]): StepResult {
-  const next = s.room + 1;
-  if (next >= rooms.length) {
-    events.push({ type: 'run_completed', runTime: s.runTime, deaths: s.deaths });
-    return { state: { ...s, phase: { kind: 'cleared', since: s.clock } }, events };
+function leaveRoom(state: GameState, rooms: readonly Room[], events: GameEvent[]): StepResult {
+  const nextRoom = state.room + 1;
+  if (nextRoom >= rooms.length) {
+    events.push({ type: 'run_completed', runTime: state.runTime, deaths: state.deaths });
+    return { state: { ...state, phase: { kind: 'cleared', since: state.clock } }, events };
   }
-  events.push(roomEntered(next, rooms));
-  return { state: { ...s, ...respawnIn(rooms, next) }, events };
+  events.push(roomEntered(nextRoom, rooms));
+  return { state: { ...state, ...respawnIn(rooms, nextRoom) }, events };
 }
 
-function stepDying(s: GameState, since: number, rooms: readonly Room[]): StepResult {
-  if (s.clock - since < DEATH.respawnDelay) return { state: s, events: [] };
-  return { state: { ...s, phase: { kind: 'playing' }, ...respawnIn(rooms, s.room) }, events: [] };
+function stepDying(state: GameState, since: number, rooms: readonly Room[]): StepResult {
+  if (state.clock - since < DEATH.respawnDelay) return { state, events: [] };
+  return { state: { ...state, phase: { kind: 'playing' }, ...respawnIn(rooms, state.room) }, events: [] };
 }
 
 function stepCleared(
-  s: GameState,
+  state: GameState,
   input: InputFrame,
   since: number,
   rooms: readonly Room[],
 ): StepResult {
-  const restart = input.jumpPressed && s.clock - since >= RESTART_GUARD;
-  return { state: restart ? newGame(rooms, 0, s.clock) : s, events: [] };
+  const restart = input.jumpPressed && state.clock - since >= RUN.restartGuard;
+  return { state: restart ? newGame(rooms, 0, state.clock) : state, events: [] };
 }
 
 function respawnIn(rooms: readonly Room[], room: number): Pick<GameState, 'room' | 'player' | 'streaks'> {
