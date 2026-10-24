@@ -46,8 +46,13 @@ export const STREAK = {
   /** Visual thickness below the standing surface. Collision only uses the top. */
   thickness: 0.34,
   /** Older streaks are dropped past this count. Also sizes the shader's uniform array. */
-  maxAlive: 4,
+  maxAlive: 8,
 } as const;
+
+/** Ice is cut into a fixed grid; simulation and rendering share the surviving cells. */
+export const ICE = { cell: 0.5, clearance: 0.16, maxRects: 96 } as const;
+export const REFILL = { radius: 0.55, max: 8 } as const;
+export const SEEKER = { radius: 0.42, range: 12, windup: 0.85, speed: 10, recovery: 1.6, max: 3 } as const;
 
 export const SPIKES = {
   /** Target width of one spike; a row picks the nearest whole count that fills it. */
