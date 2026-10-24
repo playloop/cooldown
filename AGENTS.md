@@ -89,8 +89,9 @@ The dependency direction is one way: `sim` knows nothing about `render`,
 - **A new thing that is hot or cold:** heat is meant to become a rule of the
   world. Give it a layer function in `render/shaders/scene.frag` and pack its
   data in `SceneFrame`; keep the rule itself in `sim/`.
-- **Analytics:** subscribe to the `EventBus` in `main.ts`. The TODO there marks
-  where the Playloop SDK goes in episode 1. The simulation never imports it.
+- **Analytics:** the Playloop SDK subscribes to the `EventBus` in `main.ts`.
+  `events/telemetry.ts` maps game events to telemetry. The simulation never
+  imports the SDK.
 
 ## Shader rules
 

@@ -17,12 +17,15 @@ Arrows or A/D to move, Space or Z to jump, X or Shift to dash.
 
 ## Follow along
 
-Every episode has two tags. Start from the first, run that episode's prompts
-in Claude Code, and compare what you get with the second:
+Every episode has two tags. Read the [episode 1 prompts](prompts/01-put-the-sdk-in.md)
+before checking out the start tag, which does not contain the prompts file yet.
+Then run the prompts in Claude Code and compare what you get with the end tag:
 
 ```bash
 git checkout ep01-start            # the game before the episode
-# run prompts/01-put-the-sdk-in.md, one prompt at a time
+# read the prompts from main while working at the start tag:
+git show main:prompts/01-put-the-sdk-in.md
+# run those prompts in Claude Code, one at a time
 git diff ep01-start ep01-end       # what the episode changed
 ```
 
