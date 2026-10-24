@@ -1,6 +1,6 @@
 import type { InputFrame } from '../sim/input-frame';
 
-export type Action = 'left' | 'right' | 'jump' | 'dash';
+export type Action = 'left' | 'right' | 'up' | 'down' | 'jump' | 'dash';
 
 /**
  * Collects key downs and ups between simulation steps and hands each step an
@@ -34,6 +34,8 @@ export class InputLatch {
     const frame: InputFrame = {
       left: this.held.has('left'),
       right: this.held.has('right'),
+      up: this.held.has('up'),
+      down: this.held.has('down'),
       jumpHeld: this.held.has('jump'),
       jumpPressed: this.pressed.has('jump'),
       dashPressed: this.pressed.has('dash'),

@@ -1,4 +1,5 @@
 import { PLAYER, WORLD } from '../config';
+import { expanded, segmentHit } from '../core/segment';
 import { overlaps, right, spansOverlap, top, type Rect } from '../core/rect';
 import { bodyOf, feetY, type Support } from './player';
 
@@ -7,6 +8,13 @@ export interface Platform {
   readonly x0: number;
   readonly x1: number;
   readonly y: number;
+  readonly endY?: number;
+}
+
+/** Height at the foot's center, clamped to the actual ends of a one-way ramp. */
+export function platformY(p: Platform, x: number): number {
+  const t = p.x1 - p.x0 < CONTACT ? 1 : Math.max(0, Math.min(1, (x - p.x0) / (p.x1 - p.x0)));
+  return p.y + ((p.endY ?? p.y) - p.y) * t;
 }
 
 export interface Body {
@@ -35,7 +43,7 @@ export function moveAndCollide(
   platforms: readonly Platform[],
 ): Moved {
   const afterX = moveX(b, dt, solids);
-  const afterY = moveY(afterX, dt, solids, platforms);
+  const afterY = moveY(afterX, dt, solids, platforms, b.x);
   return { ...afterY, support: supportUnder(afterY, solids, platforms) };
 }
 
@@ -56,7 +64,7 @@ function moveX(b: Body, dt: number, solids: readonly Rect[]): Body {
   return { ...b, x, vx: blocked ? 0 : b.vx };
 }
 
-function moveY(b: Body, dt: number, solids: readonly Rect[], platforms: readonly Platform[]): Body {
+function moveY(b: Body, dt: number, solids: readonly Rect[], platforms: readonly Platform[], previousX: number): Body {
   const feetBefore = feetY(b);
   const falling = b.vy <= 0;
   let y = b.y + b.vy * dt;
@@ -71,9 +79,14 @@ function moveY(b: Body, dt: number, solids: readonly Rect[], platforms: readonly
   if (falling) {
     const feet = feetY({ y });
     for (const platform of platforms) {
-      const crossed = feetBefore >= platform.y - CONTACT && feet < platform.y;
-      if (crossed && footprintOver(b.x, platform.x0, platform.x1)) {
-        y = Math.max(y, platform.y + PLAYER.halfHeight);
+      const surface = platformY(platform, b.x);
+      const previousSurface = platformY(platform, previousX);
+      const following = Math.abs(feetBefore - previousSurface) <= CONTACT && footprintOver(previousX, platform.x0, platform.x1);
+      const crossed = feetBefore >= previousSurface - CONTACT && feet < surface;
+      if ((crossed || following) && footprintOver(b.x, platform.x0, platform.x1)) {
+        const candidate = surface + PLAYER.halfHeight;
+        if (solids.some((solid) => overlaps(bodyOf({ x: b.x, y: candidate }), solid))) continue;
+        y = following && !blocked ? candidate : Math.max(y, candidate);
         blocked = true;
       }
     }
@@ -98,7 +111,27 @@ export function supportUnder(
   );
   if (onGround) return 'ground';
   const onStreak = platforms.some(
-    (platform) => Math.abs(feet - platform.y) <= CONTACT && footprintOver(b.x, platform.x0, platform.x1),
+    (platform) => Math.abs(feet - platformY(platform, b.x)) <= CONTACT && footprintOver(b.x, platform.x0, platform.x1),
   );
   return onStreak ? 'streak' : null;
+}
+
+/** A dash follows one straight segment and ends at its first solid contact. */
+export function moveDash(b: Body, dt: number, solids: readonly Rect[]): Moved & { blocked: boolean } {
+  const dx = b.vx * dt, dy = b.vy * dt;
+  const end = { x: b.x + dx, y: b.y + dy };
+  let fraction = 1;
+  for (const solid of solids) {
+    const contact = segmentHit(b, end, expanded(solid, PLAYER.halfWidth, PLAYER.halfHeight));
+    if (contact === null) continue;
+    // Touching a surface while moving away or parallel is not an impact.
+    if (contact === 0 && !overlaps(bodyOf({ x: b.x + dx * 1e-4, y: b.y + dy * 1e-4 }), solid)) continue;
+    fraction = Math.min(fraction, contact);
+  }
+  if (end.x < PLAYER.halfWidth && dx < 0) fraction = Math.min(fraction, (PLAYER.halfWidth - b.x) / dx);
+  if (end.x > WORLD.width - PLAYER.halfWidth && dx > 0) fraction = Math.min(fraction, (WORLD.width - PLAYER.halfWidth - b.x) / dx);
+  const blocked = fraction < 1;
+  const moved = { x: b.x + dx * fraction, y: b.y + dy * fraction,
+    vx: blocked ? 0 : b.vx, vy: blocked ? 0 : b.vy };
+  return { ...moved, blocked, support: supportUnder(moved, solids, []) };
 }

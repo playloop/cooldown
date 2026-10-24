@@ -13,6 +13,7 @@ export interface Streak {
   readonly endX: number;
   /** The standing surface: the runner's feet height when the dash began. */
   readonly y: number;
+  readonly endY: number;
   /** Birth time of the point at startX. */
   readonly startTime: number;
   /** Birth time of the point at endX. */
@@ -27,12 +28,18 @@ export interface Span {
 }
 
 export function startStreak(x: number, y: number, now: number, lifetime: number): Streak {
-  return { startX: x, endX: x, y, startTime: now, endTime: now, lifetime };
+  return { startX: x, endX: x, y, endY: y, startTime: now, endTime: now, lifetime };
 }
 
 /** The dash moved on: the streak now reaches `x`, and that point is born `now`. */
-export function extendStreak(s: Streak, x: number, now: number): Streak {
-  return { ...s, endX: x, endTime: now };
+export function extendStreak(s: Streak, x: number, now: number, y = s.endY): Streak {
+  return { ...s, endX: x, endY: y, endTime: now };
+}
+
+export function streakY(s: Streak, x: number): number {
+  const dx = s.endX - s.startX;
+  const t = Math.abs(dx) < 1e-6 ? 1 : Math.max(0, Math.min(1, (x - s.startX) / dx));
+  return s.y + (s.endY - s.y) * t;
 }
 
 /** Heat of a point born at `born`: 1 when new, 0 when cold, negative after. */

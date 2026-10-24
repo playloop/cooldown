@@ -3,13 +3,13 @@ import { overlaps, rect, type Rect } from '../core/rect';
 import type { Room, SpikeRow } from '../world/room';
 import { CONTACT, footprintOver } from './collision';
 import { bodyOf, feetY, type Player } from './player';
-import { fullSpan, type Streak } from './streak';
+import { fullSpan, streakY, type Streak } from './streak';
 
 /**
  * Why the runner died. These strings are the contract with anything that
  * records deaths, so a new way to die gets a new cause, never a reused one.
  */
-export type DeathCause = 'spikes' | 'streak_cooled' | 'fell_out';
+export type DeathCause = 'spikes' | 'streak_cooled' | 'fell_out' | 'killed_by_seeker';
 
 /** The deadly part of a spike row: full width, but shorter than the drawn spikes. */
 export function spikeHitbox(row: SpikeRow): Rect {
@@ -31,7 +31,7 @@ export function droppedByCooling(
   const feet = feetY(before);
   return streaks.some((s) => {
     const span = fullSpan(s);
-    return Math.abs(s.y - feet) <= CONTACT && footprintOver(after.x, span.x0, span.x1);
+    return Math.abs(streakY(s, before.x) - feet) <= CONTACT && footprintOver(after.x, span.x0, span.x1);
   });
 }
 

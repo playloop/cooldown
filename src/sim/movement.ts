@@ -18,7 +18,7 @@ export function approach(value: number, target: number, maxDelta: number): numbe
  * Turns one step of input into new velocities and timers: run, jump, dash and
  * gravity. Positions do not change here; collision does that next.
  */
-export function applyControls(p: Player, input: InputFrame, dt: number): ControlResult {
+export function applyControls(p: Player, input: InputFrame, dt: number, diagonal = false): ControlResult {
   const axis = horizontalAxis(input);
   const grounded = p.support !== null;
   const coyote = grounded ? PLAYER.coyoteTime : Math.max(0, p.coyote - dt);
@@ -28,19 +28,26 @@ export function applyControls(p: Player, input: InputFrame, dt: number): Control
     // A dash is committed: straight line, fixed speed, no gravity. It stops dead
     // when it ends, so the runner lands standing on the end of its own streak.
     const dashTime = Math.max(0, p.dashTime - dt);
-    const vx = dashTime > 0 ? p.facing * DASH.speed : 0;
-    return { player: { ...p, vx, vy: 0, dashTime, coyote, jumpBuffer }, dashStarted: false };
+    const vx = dashTime > 0 ? p.dashX * DASH.speed : 0;
+    const vy = dashTime > 0 ? p.dashY * DASH.speed : 0;
+    return { player: { ...p, vx, vy, dashTime, coyote, jumpBuffer }, dashStarted: false };
   }
 
   const facing = axis === 0 ? p.facing : axis;
 
   if (input.dashPressed && p.canDash && !grounded) {
+    const vertical = diagonal && input.up !== input.down ? (input.up ? 1 : -1) : 0;
+    const scale = vertical === 0 ? 1 : Math.SQRT1_2;
+    const dashX = facing * scale;
+    const dashY = vertical * scale;
     return {
       player: {
         ...p,
         facing,
-        vx: facing * DASH.speed,
-        vy: 0,
+        vx: dashX * DASH.speed,
+        vy: dashY * DASH.speed,
+        dashX,
+        dashY,
         dashTime: DASH.duration,
         canDash: false,
         coyote: 0,

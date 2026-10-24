@@ -33,6 +33,8 @@ describe('InputLatch', () => {
     expect(latch.take()).toEqual({
       left: false,
       right: false,
+      up: false,
+      down: false,
       jumpHeld: false,
       jumpPressed: false,
       dashPressed: false,

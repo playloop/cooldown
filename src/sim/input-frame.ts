@@ -6,6 +6,8 @@
 export interface InputFrame {
   readonly left: boolean;
   readonly right: boolean;
+  readonly up: boolean;
+  readonly down: boolean;
   readonly jumpHeld: boolean;
   readonly jumpPressed: boolean;
   readonly dashPressed: boolean;
@@ -14,6 +16,8 @@ export interface InputFrame {
 export const NO_INPUT: InputFrame = {
   left: false,
   right: false,
+  up: false,
+  down: false,
   jumpHeld: false,
   jumpPressed: false,
   dashPressed: false,

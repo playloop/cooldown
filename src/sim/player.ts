@@ -20,7 +20,9 @@ export interface Player {
   readonly jumpBuffer: number;
   /** Seconds left in the current dash; 0 when not dashing. */
   readonly dashTime: number;
-  /** One dash per trip through the air. Only solid ground gives it back, never a streak. */
+  readonly dashX: number;
+  readonly dashY: number;
+  /** One dash per trip through the air. Solid ground and pickups give it back, never a streak. */
   readonly canDash: boolean;
   /**
    * Who to blame if this fall ends in a hazard: set when something drops the
@@ -41,6 +43,8 @@ export function spawnPlayer(feet: Point): Player {
     coyote: 0,
     jumpBuffer: 0,
     dashTime: 0,
+    dashX: 1,
+    dashY: 0,
     canDash: true,
     fallBlame: null,
   };

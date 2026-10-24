@@ -1,5 +1,8 @@
 import type { Room } from '../world/room';
-import { moveAndCollide } from './collision';
+import type { Rect } from '../core/rect';
+import { carveIce } from './ice';
+import { isDashing } from './player';
+import { moveAndCollide, moveDash } from './collision';
 import { droppedByCooling, type DeathCause } from './death';
 import type { InputFrame } from './input-frame';
 import { applyControls, type ControlResult } from './movement';
@@ -19,16 +22,22 @@ export function stepPlayer(
   room: Room,
   streaks: readonly Streak[],
   now: number,
-): ControlResult {
-  const { player: controlled, dashStarted } = applyControls(before, input, dt);
-  const moved = moveAndCollide(controlled, dt, room.solids, platformsOf(streaks, now));
-  const afterMove: Player = { ...controlled, ...moved };
+  ice: readonly Rect[] = [],
+): ControlResult & { readonly ice: readonly Rect[] } {
+  const { player: controlled, dashStarted } = applyControls(before, input, dt, room.diagonal);
+  const hot = dashStarted || isDashing(before);
+  const reachable = hot ? moveDash(controlled, dt, room.solids) : controlled;
+  const remaining = hot ? carveIce(ice, before, reachable) : ice;
+  const solids = [...room.solids, ...remaining];
+  const dashMove = hot ? moveDash(controlled, dt, solids) : null;
+  const moved = dashMove ?? moveAndCollide(controlled, dt, solids, platformsOf(streaks, now));
+  const afterMove: Player = { ...controlled, ...moved, dashTime: dashMove?.blocked ? 0 : controlled.dashTime };
   const player: Player = {
     ...afterMove,
     canDash: afterMove.canDash || moved.support === 'ground',
     fallBlame: nextFallBlame(before, afterMove, streaks),
   };
-  return { player, dashStarted };
+  return { player, dashStarted, ice: remaining };
 }
 
 /** Landing clears the blame; an existing blame sticks; a cooled streak sets one. */
