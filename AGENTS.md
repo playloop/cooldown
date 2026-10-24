@@ -69,6 +69,8 @@ The dependency direction is one way: `sim` knows nothing about `render`,
   room solvability. A fix that makes a failing test pass is a repair; a change
   that makes passing tests wrong is a design change and says so in the commit.
 - **No em dashes** anywhere (the commit hook blocks them). American spelling.
+- **Never use an em dash in anything you write**, including your replies in a session: this repo
+  is built on camera, so what you say is on screen too. Use a period, comma, colon or parentheses.
 
 ## How things grow
 
