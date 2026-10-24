@@ -18,6 +18,8 @@ see, so it has to stay simple and clean. `docs/EPISODES.md` is the plan.
 
 ```bash
 npm install
+cp .githooks/denylist.example .githooks/denylist.local
+# Edit denylist.local for your own private terms before installing the hooks.
 bash .githooks/install.sh     # once per clone: turns on the commit gates
 npm run dev                   # local dev server
 npm test                      # vitest, all game logic
