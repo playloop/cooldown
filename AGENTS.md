@@ -38,11 +38,12 @@ src/
   core/                rect math, fixed-step timing (no game knowledge)
   sim/                 the game rules, pure functions, no DOM, no WebGL
     game.ts            one fixed step of the whole game; phases, rooms, events
+    step-player.ts     one step of the runner: controls, collision, dash refill, fall blame
     movement.ts        input to velocity: run, jump, coyote time, buffer, dash
     collision.ts       move and push out of solids; streaks are one-way platforms
     streak.ts          one streak's heat math
     streak-list.ts     creating, stretching and dropping streaks
-    death.ts           hazards and the cause of death
+    death.ts           hazards (a list) and the cause of death
   world/               rooms as plain data, plus their tests
   events/              GameEvent union and a tiny typed EventBus (the analytics seam)
   input/               keyboard to InputFrame, with press latching
@@ -74,8 +75,13 @@ The dependency direction is one way: `sim` knows nothing about `render`,
 - **A new room:** add it to `world/rooms.ts` and add a route that clears it to
   `testing/routes.ts`. The room tests then prove it spawns on ground, has a
   closed floor, fits the shader, and can be cleared.
-- **A new way to die:** add the cause to `DeathCause` in `sim/death.ts`. Causes
-  are a contract with whatever records deaths: never reuse one for a new meaning.
+- **A new way to die:** add the cause to `DeathCause` and a hazard to `HAZARDS`
+  in `sim/death.ts`. If something knocks the runner into a hazard, set its
+  `fallBlame` instead. Causes are a contract with whatever records deaths:
+  never reuse one for a new meaning.
+- **A different streak lifetime** (a cold room, an experiment): pass it to
+  `updateStreaks`. Each streak carries the lifetime it was born with, and the
+  renderer reads it from the streak, so they cannot disagree.
 - **A new thing that is hot or cold:** heat is meant to become a rule of the
   world. Give it a layer function in `render/shaders/scene.frag` and pack its
   data in `SceneFrame`; keep the rule itself in `sim/`.
