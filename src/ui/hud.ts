@@ -4,6 +4,8 @@ import { formatTime } from './format';
 
 export interface HudElements {
   readonly room: HTMLElement;
+  readonly hint: HTMLElement;
+  readonly dash: HTMLElement;
   readonly time: HTMLElement;
   readonly deaths: HTMLElement;
   readonly title: HTMLElement;
@@ -23,6 +25,9 @@ export class Hud {
   update(state: GameState): void {
     const room = this.rooms[state.room];
     this.set(this.el.room, `ROOM ${state.room + 1}/${this.rooms.length}  ${room?.name.toUpperCase() ?? ''}`);
+    this.set(this.el.hint, room?.hint ?? '');
+    this.set(this.el.dash, state.player.canDash ? 'DASH READY' : 'GROUND OR DIAMOND');
+    this.el.dash.dataset.ready = String(state.player.canDash);
     this.set(this.el.time, formatTime(state.runTime));
     this.set(this.el.deaths, `DEATHS ${state.deaths}`);
     this.el.title.hidden = state.started;

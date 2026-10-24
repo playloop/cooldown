@@ -45,6 +45,7 @@ export function play(
 /** One scripted button press, fired the first step `when` is true. */
 export interface Move {
   readonly press: 'jump' | 'dash';
+  readonly aim?: 'up' | 'down';
   readonly when: (state: GameState, sincePrevious: number) => boolean;
 }
 
@@ -84,6 +85,8 @@ export function holdRight(moves: readonly Move[]): Script {
     }
     return {
       right: true,
+      up: fire && move.aim === 'up',
+      down: fire && move.aim === 'down',
       jumpHeld: jumped,
       jumpPressed: fire && move.press === 'jump',
       dashPressed: fire && move.press === 'dash',

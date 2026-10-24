@@ -99,8 +99,10 @@ describe('dying', () => {
   });
 
   it('blames the spikes when you jump off the streak and fall short', () => {
-    // Room 1's route, tried on the wider gap in room 2: it falls short.
-    const { events } = play(ROOMS, 2, holdRight(ROUTES['Stand on it']), oneAttempt);
+    // A deliberately overwide fixture keeps this cause regression independent of progression.
+    const wide: Room = { ...flat, solids: [rect(0, 0, 8, 5), rect(8, 0, 14.5, 1), rect(22.5, 0, 9.5, 7.6)],
+      spikes: [{ x0: 8, x1: 22.5, baseY: 1 }], spawn: { x: 2, y: 5 } };
+    const { events } = play([wide], 0, holdRight(ROUTES['Stand on it']), oneAttempt);
     expect(events.find((e) => e.type === 'player_died')).toMatchObject({ cause: 'spikes' });
   });
 });

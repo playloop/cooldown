@@ -25,39 +25,67 @@ const firstGap = pit(18, 26);
 
 const climbPit = pit(11, 20);
 
-// The deliberately too-hard jump. Reaching the far ledge needs a dash at the top
-// of the first jump, then a second jump from the very end of the streak before
-// it cools. This is the one players are meant to die on, and the numbers here
-// (with STREAK.lifetime) are what an episode tunes after reading the deaths.
-const gapPit = pit(8, 22.5);
-
+/** Ten short lessons. Lower resting ledges leave room to recover; aerial routes save time. */
 export const ROOMS: readonly Room[] = [
   {
-    name: 'Warm up',
+    name: 'Warm up', hint: 'Jump the small gap. Jump, then dash across the wide one.',
     solids: [ground(0, 9, 4), warmUp.floor, ground(12, 18, 4), firstGap.floor, ground(26, 32, 4)],
-    spikes: [warmUp.spikes, firstGap.spikes],
-    spawn: { x: 2, y: 4 },
-    exit: exitAt(4),
+    spikes: [warmUp.spikes, firstGap.spikes], spawn: { x: 2, y: 4 }, exit: exitAt(4),
   },
   {
-    name: 'Stand on it',
+    name: 'Stand on it', hint: 'Jump, dash, then jump from your streak. It lasts about a second.',
     solids: [ground(0, 11, 3), climbPit.floor, ground(20, 32, 6.5)],
-    spikes: [climbPit.spikes],
-    spawn: { x: 2, y: 3 },
-    exit: exitAt(6.5),
+    spikes: [climbPit.spikes], spawn: { x: 2, y: 3 }, exit: exitAt(6.5),
   },
   {
-    name: 'The gap',
-    solids: [ground(0, 8, 5), gapPit.floor, ground(22.5, 32, 7.6)],
-    spikes: [gapPit.spikes],
-    spawn: { x: 2, y: 5 },
-    exit: exitAt(7.6),
+    name: 'Break the ice', hint: 'Dash through the ice. The opening stays until you retry.',
+    solids: [ground(0, 32, 3)], ice: [rect(12, 3, 2, 8)],
+    spikes: [], spawn: { x: 2, y: 3 }, exit: exitAt(3),
   },
   {
-    name: 'Cool down',
-    solids: [ground(0, 32, 3)],
-    spikes: [],
-    spawn: { x: 2, y: 3 },
-    exit: exitAt(3),
+    name: 'Cut a bridge', hint: 'Carve high, then jump off the streak. The low shelf is a place to rest.',
+    solids: [ground(0, 12, 3), pit(12, 21).floor, ground(16, 18, 3), ground(21, 32, 4)],
+    ice: [rect(10.5, 3, 2, 8)], spikes: [pit(12.5, 16).spikes, pit(18, 21).spikes],
+    spawn: { x: 2, y: 3 }, exit: exitAt(4),
+  },
+  {
+    name: 'Second wind', hint: 'The hollow diamond gives back one dash. Streaks do not.',
+    solids: [ground(0, 10, 3), pit(10, 23).floor, ground(17, 19, 3), ground(23, 32, 3)],
+    pickups: [{ x: 14, y: 6.2 }, { x: 18, y: 6.2 }, { x: 21, y: 6.2 }],
+    spikes: [pit(10, 17).spikes, pit(19, 23).spikes], spawn: { x: 2, y: 3 }, exit: exitAt(3),
+  },
+  {
+    name: 'A new angle', diagonal: true,
+    hint: 'Diagonals unlocked. Hold Up/W or Down/S as you dash. Space jumps without aiming.',
+    solids: [ground(0, 12, 3), ground(12, 22, 7.5), ground(22, 32, 10.5)],
+    spikes: [], spawn: { x: 2, y: 3 }, exit: exitAt(10.5),
+  },
+  {
+    name: 'Through and over', diagonal: true,
+    hint: 'An angled cut leaves a ramp. Jump from it, or catch a diamond and dash again.',
+    solids: [ground(0, 12, 3), pit(12, 22).floor, ground(17, 19, 3), ground(22, 32, 6)],
+    ice: [rect(11, 3, 2, 8)], pickups: [{ x: 15, y: 8.5 }, { x: 21, y: 6.2 }],
+    spikes: [pit(13, 17).spikes, pit(19, 22).spikes], spawn: { x: 2, y: 3 }, exit: exitAt(6),
+  },
+  {
+    name: 'Bait', diagonal: true,
+    hint: 'Seekers mark a hot streak, then charge that spot. Move away from the marked spot.',
+    solids: [ground(0, 32, 3)], seekers: [{ x: 18, y: 4 }],
+    spikes: [], spawn: { x: 2, y: 3 }, exit: exitAt(3),
+  },
+  {
+    name: 'Crossfire', diagonal: true,
+    hint: 'Leave heat behind to draw the seeker away. The middle shelf gives you a breather.',
+    solids: [ground(0, 10, 3), pit(10, 23).floor, ground(16, 19, 3), ground(23, 32, 5)],
+    seekers: [{ x: 25, y: 6 }], pickups: [{ x: 14, y: 6.2 }, { x: 18, y: 6.2 }, { x: 21, y: 6.2 }],
+    spikes: [pit(10, 16).spikes, pit(19, 23).spikes], spawn: { x: 2, y: 3 }, exit: exitAt(5),
+  },
+  {
+    name: 'All that heat', diagonal: true,
+    hint: 'Carve, refill, climb, and leave the seeker a streak to chase. You know the way.',
+    solids: [ground(0, 12, 3), pit(12, 23).floor, ground(16, 19, 3), ground(23, 32, 7)],
+    ice: [rect(10.5, 3, 2, 8)], pickups: [{ x: 14, y: 6.2 }, { x: 18, y: 6.2 }, { x: 21, y: 6.2 }],
+    seekers: [{ x: 27, y: 8 }], spikes: [pit(12.5, 16).spikes, pit(19, 23).spikes],
+    spawn: { x: 2, y: 3 }, exit: exitAt(7),
   },
 ];

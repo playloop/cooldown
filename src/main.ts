@@ -45,6 +45,8 @@ const frame = new SceneFrame();
 const hud = new Hud(
   {
     room: byId('hud-room', HTMLElement),
+    hint: byId('room-hint', HTMLElement),
+    dash: byId('hud-dash', HTMLElement),
     time: byId('hud-time', HTMLElement),
     deaths: byId('hud-deaths', HTMLElement),
     title: byId('title', HTMLElement),

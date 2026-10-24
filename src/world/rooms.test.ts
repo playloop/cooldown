@@ -5,7 +5,7 @@ import { supportUnder } from '../sim/collision';
 import { spikeHitbox } from '../sim/death';
 import { bodyOf, spawnPlayer } from '../sim/player';
 import { after, afterDash, atX, holdRight, oneAttempt, play, type Move } from '../testing/play-script';
-import { ROUTES } from '../testing/routes';
+import { ROUTES, AIR_ROUTES } from '../testing/routes';
 import { ROOMS } from './rooms';
 
 const ROUTE_TABLE: Readonly<Record<string, readonly Move[]>> = ROUTES;
@@ -34,7 +34,7 @@ describe.each(ROOMS.map((room, index) => ({ room, index })))('room $index, $room
     expect(route, `add a route for "${room.name}" in src/testing/routes.ts`).toBeDefined();
     const { events } = play(ROOMS, index, holdRight(route ?? []), oneAttempt);
     const outcome = events.find((e) => e.type !== 'run_started');
-    expect(outcome?.type).toBe(index === ROOMS.length - 1 ? 'run_completed' : 'room_entered');
+    expect(outcome?.type, JSON.stringify({outcome})).toBe(index === ROOMS.length - 1 ? 'run_completed' : 'room_entered');
   });
 });
 
@@ -64,13 +64,40 @@ function clearRate(index: number): number {
 
 // Each grid replays about a thousand attempts (around a second), so give it headroom on a busy machine.
 describe('difficulty', { timeout: 20_000 }, () => {
-  it('makes the gap deliberately too hard: possible, but with a tiny timing window', () => {
-    const gap = clearRate(2);
-    expect(gap).toBeGreaterThan(0);
-    expect(gap).toBeLessThan(0.05);
+  it('introduces ice on safe ground instead of the old mandatory difficulty spike', () => {
+    expect(ROOMS[2]?.spikes).toHaveLength(0);
+    expect(ROOMS[2]?.ice?.length).toBeGreaterThan(0);
   });
 
   it('keeps the room that teaches the streak forgiving', () => {
     expect(clearRate(1)).toBeGreaterThan(0.25);
+  });
+});
+
+
+describe('optional aerial routes', () => {
+  it.each([4, 6, 8, 9])('clears room %s faster than its resting route', (index) => {
+    const name = ROOMS[index]?.name ?? '';
+    const route = ROUTE_TABLE[name] ?? [];
+    const airRoutes: Readonly<Record<string, readonly Move[]>> = AIR_ROUTES;
+    const fast = play(ROOMS, index, holdRight(airRoutes[name] ?? []), oneAttempt);
+    const main = play(ROOMS, index, holdRight(route), oneAttempt);
+    expect(fast.events.some((e) => e.type === 'room_entered' || e.type === 'run_completed')).toBe(true);
+    expect(fast.state.runTime).toBeLessThan(main.state.runTime);
+  });
+});
+
+
+describe('main-route timing tolerance', () => {
+  it.each([2, 3, 4, 5, 6, 7, 8, 9])('clears room %s with nearby jump and dash timings', (index) => {
+    const moves = ROUTE_TABLE[ROOMS[index]?.name ?? ''] ?? [];
+    let wins = 0;
+    for (const shift of [-0.25, 0, 0.25]) for (const delay of [-0.025, 0, 0.025]) {
+      const varied = moves.map((move): Move => ({ ...move, when: (state, since) =>
+        move.when({ ...state, player: { ...state.player, x: state.player.x - shift } }, since - delay) }));
+      const result = play(ROOMS, index, holdRight(varied), oneAttempt, 8);
+      if (result.events.some((e) => e.type === 'room_entered' || e.type === 'run_completed')) wins++;
+    }
+    expect(wins).toBeGreaterThanOrEqual(6);
   });
 });

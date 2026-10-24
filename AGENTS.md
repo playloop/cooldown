@@ -5,13 +5,16 @@ people) working on this repo.
 
 ## What this is
 
-A tiny browser platformer with one mechanic: an air dash leaves a white-hot
+A small browser platformer built around heat: an air dash leaves a white-hot
 streak you can stand on until it cools, about a second. The whole look is one
 WebGL fragment shader that draws a thermal camera: every pixel is one heat
 number pushed through the inferno colormap, so a streak's color is how long it
 has left.
 
-It is built in public, one episode at a time. The code is part of what people
+Ten rooms add ice carving, dash refills, diagonals, and charging seekers.
+The original four-room game remains at the episode 1 tags.
+
+It is built in public, with a build-along series. The code is part of what people
 see, so it has to stay simple and clean. `docs/EPISODES.md` is the plan.
 
 ## Run, test, build

@@ -13,7 +13,16 @@ npm install
 npm run dev
 ```
 
-Arrows or A/D to move, Space or Z to jump, X or Shift to dash.
+Arrows or A/D to move, Space/Z/W/Up to jump, X/Shift/K to dash.
+From room 6, hold Up/W or Down/S while dashing to aim diagonally. Space or Z
+jumps without aiming. A dash needs an airborne runner and one available charge.
+
+Ten short rooms introduce ice carving, dash refills, angled streaks, and seekers
+that commit to a marked hot spot. Openings and pickups reset when you die.
+Lower ledges give you places to rest; chaining refills skips them.
+
+The expansion is a playtest build. Episode 1's tags preserve the four-room game.
+See [the playtest checklist](docs/PLAYTEST.md) for controls and verification.
 
 ## Follow along
 

@@ -85,3 +85,19 @@ kbd {
   padding: 0 0.35em;
   font: inherit;
 }
+
+.lesson {
+  position: absolute;
+  bottom: 7%;
+  left: 5%;
+  right: 7%;
+  display: flex;
+  align-items: baseline;
+  gap: 1.5em;
+  pointer-events: none;
+  font-size: clamp(10px, 1.25vw, 15px);
+  text-shadow: 0 1px 4px #000, 0 0 8px #000;
+}
+.lesson p { margin: 0; line-height: 1.5; }
+#hud-dash { flex: 0 0 auto; color: var(--ink-dim); font-size: 0.85em; letter-spacing: 0.08em; }
+#hud-dash[data-ready="true"] { color: var(--hot); }
