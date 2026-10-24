@@ -101,3 +101,38 @@ kbd {
 .lesson p { margin: 0; line-height: 1.5; }
 #hud-dash { flex: 0 0 auto; color: var(--ink-dim); font-size: 0.85em; letter-spacing: 0.08em; }
 #hud-dash[data-ready="true"] { color: var(--hot); }
+
+#audio-controls {
+  position: absolute;
+  right: 5%;
+  bottom: 1.4%;
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+  font-size: clamp(10px, 1.2vw, 14px);
+}
+#audio-controls button, #audio-controls summary {
+  font: inherit;
+  color: var(--ink);
+  background: #140d22ed;
+  border: 1px solid #fcd25a60;
+  border-radius: 4px;
+  padding: 0.35em 0.65em;
+  cursor: pointer;
+}
+.audio-panel {
+  position: absolute;
+  bottom: 2.8em;
+  right: 0;
+  width: 210px;
+  padding: 14px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
+  border: 1px solid #fcd25a60;
+  border-radius: 6px;
+  background: #140d22f5;
+}
+.audio-panel input { width: 100%; accent-color: var(--hot); }
+.audio-panel small { grid-column: 1 / -1; color: var(--ink-dim); }
+#audio-controls :focus-visible { outline: 2px solid var(--hot); outline-offset: 2px; }

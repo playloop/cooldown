@@ -14,6 +14,19 @@
         <span id="hud-time"></span>
       </div>
       <div class="lesson"><span id="hud-dash"></span><p id="room-hint"></p></div>
+      <div id="audio-controls">
+        <button id="audio-mute" type="button" aria-pressed="false">Mute [M]</button>
+        <details>
+          <summary>Sound</summary>
+          <div class="audio-panel">
+            <label for="audio-music">Music</label>
+            <input id="audio-music" type="range" min="0" max="100" value="35" />
+            <label for="audio-effects">Effects</label>
+            <input id="audio-effects" type="range" min="0" max="100" value="80" />
+            <small id="audio-status" role="status">Move or click for sound</small>
+          </div>
+        </details>
+      </div>
       <section id="title" class="card">
         <h1>COOLDOWN</h1>
         <p>Dash in the air to leave a white-hot streak.<br />Stand on it before it cools.<br />Ten rooms. Carve ice, chain dashes, and bait seekers.</p>

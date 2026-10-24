@@ -24,7 +24,7 @@ export function stepPlayer(
   now: number,
   ice: readonly Rect[] = [],
 ): ControlResult & { readonly ice: readonly Rect[] } {
-  const { player: controlled, dashStarted } = applyControls(before, input, dt, room.diagonal);
+  const { player: controlled, dashStarted, jumpStarted } = applyControls(before, input, dt, room.diagonal);
   const hot = dashStarted || isDashing(before);
   const reachable = hot ? moveDash(controlled, dt, room.solids) : controlled;
   const remaining = hot ? carveIce(ice, before, reachable) : ice;
@@ -37,7 +37,7 @@ export function stepPlayer(
     canDash: afterMove.canDash || moved.support === 'ground',
     fallBlame: nextFallBlame(before, afterMove, streaks),
   };
-  return { player, dashStarted, ice: remaining };
+  return { player, dashStarted, jumpStarted, ice: remaining };
 }
 
 /** Landing clears the blame; an existing blame sticks; a cooled streak sets one. */

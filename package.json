@@ -1,7 +1,7 @@
 {
   "name": "cooldown",
   "private": true,
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "A tiny browser platformer. The dash leaves a streak you can stand on until it cools.",
   "license": "MIT",
   "type": "module",

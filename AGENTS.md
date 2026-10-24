@@ -53,6 +53,7 @@ src/
     death.ts           hazards (a list) and the cause of death
   world/               rooms as plain data, plus their tests
   events/              GameEvent union and a tiny typed EventBus (the analytics seam)
+  audio/               browser playback, local cue mixing, saved volume settings
   input/               keyboard to InputFrame, with press latching
   render/              SceneFrame (state to uniform arrays), WebGL helpers, shaders/
   ui/                  the DOM text layer (HUD, title, cleared screen)

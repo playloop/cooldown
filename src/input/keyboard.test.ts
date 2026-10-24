@@ -3,7 +3,7 @@ import { bindKeyboard } from './keyboard';
 import { InputLatch } from './input-latch';
 
 function keyboard() {
-  const target = new EventTarget();
+  const target = Object.assign(new EventTarget(), { document: new EventTarget() });
   const latch = new InputLatch();
   const unbind = bindKeyboard(target as unknown as Window, latch);
   const key = (type: 'keydown' | 'keyup', code: string): void => {

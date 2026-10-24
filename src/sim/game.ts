@@ -1,3 +1,4 @@
+import { actionCues, type SoundCue } from '../events/action-cues';
 import { DEATH, RUN, STREAK } from '../config';
 import { overlaps, type Rect } from '../core/rect';
 import type { GameEvent } from '../events/game-events';
@@ -42,6 +43,7 @@ export interface GameState {
 export interface StepResult {
   readonly state: GameState;
   readonly events: readonly GameEvent[];
+  readonly cues: readonly SoundCue[];
 }
 
 export function newGame(rooms: readonly Room[], startRoom = 0, clock = 0): GameState {
@@ -98,13 +100,15 @@ function stepPlaying(
   const { dashStarted, ice } = moved;
   const streaks = updateStreaks(next.streaks, before, player, dashStarted, next.clock, STREAK.lifetime);
   const threats = stepSeekers(next.seekers, streaks, [...room.solids, ...ice], next.clock, dt, before, player);
+  const beforeActions = next;
   next = { ...next, player, streaks, ice, pickups, seekers: threats.seekers };
+  const cues = actionCues(beforeActions, next, moved, dt);
 
   if (threats.hit) return die(next, 'killed_by_seeker', events);
   const cause = deathCheck(player, room);
   if (cause !== null) return die(next, cause, events);
   if (overlaps(bodyOf(player), room.exit)) return leaveRoom(next, rooms, events);
-  return { state: next, events };
+  return { state: next, events, cues };
 }
 
 function die(state: GameState, cause: DeathCause, events: GameEvent[]): StepResult {
@@ -119,6 +123,7 @@ function die(state: GameState, cause: DeathCause, events: GameEvent[]): StepResu
       marks: [...state.marks, mark].slice(-DEATH.maxMarks),
     },
     events,
+    cues: ['death'],
   };
 }
 
@@ -126,15 +131,15 @@ function leaveRoom(state: GameState, rooms: readonly Room[], events: GameEvent[]
   const nextRoom = state.room + 1;
   if (nextRoom >= rooms.length) {
     events.push({ type: 'run_completed', runTime: state.runTime, deaths: state.deaths });
-    return { state: { ...state, phase: { kind: 'cleared', since: state.clock } }, events };
+    return { state: { ...state, phase: { kind: 'cleared', since: state.clock } }, events, cues: ['run-clear'] };
   }
   events.push(roomEntered(nextRoom, rooms));
-  return { state: { ...state, ...respawnIn(rooms, nextRoom) }, events };
+  return { state: { ...state, ...respawnIn(rooms, nextRoom) }, events, cues: ['room-clear'] };
 }
 
 function stepDying(state: GameState, since: number, rooms: readonly Room[]): StepResult {
-  if (state.clock - since < DEATH.respawnDelay) return { state, events: [] };
-  return { state: { ...state, phase: { kind: 'playing' }, ...respawnIn(rooms, state.room) }, events: [] };
+  if (state.clock - since < DEATH.respawnDelay) return { state, events: [], cues: [] };
+  return { state: { ...state, phase: { kind: 'playing' }, ...respawnIn(rooms, state.room) }, events: [], cues: [] };
 }
 
 function stepCleared(
@@ -144,7 +149,7 @@ function stepCleared(
   rooms: readonly Room[],
 ): StepResult {
   const restart = input.jumpPressed && state.clock - since >= RUN.restartGuard;
-  return { state: restart ? newGame(rooms, 0, state.clock) : state, events: [] };
+  return { state: restart ? newGame(rooms, 0, state.clock) : state, events: [], cues: [] };
 }
 
 function respawnIn(rooms: readonly Room[], room: number): Pick<GameState, 'room' | 'player' | 'streaks' | 'ice' | 'pickups' | 'seekers'> {

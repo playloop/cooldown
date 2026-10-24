@@ -22,9 +22,13 @@ export const KEY_BINDINGS: Readonly<Record<string, Action>> = {
 export function bindKeyboard(target: Window, latch: InputLatch): () => void {
   const keys = new Set<string>();
   const onKey = (event: KeyboardEvent): void => {
+    // Range sliders and buttons own their arrows/Space instead of steering the game.
+    const controlOwnsKey = typeof Element !== 'undefined' && event.target instanceof Element
+      && event.target.closest('input, button, summary') !== null;
+    if (event.type === 'keydown' && controlOwnsKey) return;
     const action = KEY_BINDINGS[event.code];
     if (action === undefined) return;
-    event.preventDefault();
+    if (!controlOwnsKey) event.preventDefault();
     if (event.type === 'keydown') keys.add(event.code);
     else keys.delete(event.code);
     // Multiple physical keys may hold the same action. Releasing one must not
@@ -43,9 +47,11 @@ export function bindKeyboard(target: Window, latch: InputLatch): () => void {
   target.addEventListener('keydown', onKey);
   target.addEventListener('keyup', onKey);
   target.addEventListener('blur', onBlur);
+  target.document.addEventListener('visibilitychange', onBlur);
   return () => {
     target.removeEventListener('keydown', onKey);
     target.removeEventListener('keyup', onKey);
     target.removeEventListener('blur', onBlur);
+    target.document.removeEventListener('visibilitychange', onBlur);
   };
 }

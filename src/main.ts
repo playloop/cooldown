@@ -1,4 +1,6 @@
 import { Playloop } from '@playloop/sdk';
+import { GameAudio } from './audio/game-audio';
+import { bindAudioControls } from './ui/audio-controls';
 import { TIMING } from './config';
 import { FixedStep } from './core/fixed-step';
 import { exposeDebug, readDebugOptions } from './debug';
@@ -38,6 +40,8 @@ const options = readDebugOptions(location.search, ROOMS.length);
 const latch = new InputLatch();
 bindKeyboard(window, latch);
 const bus = new EventBus<GameEvent>();
+const audio = new GameAudio();
+bindAudioControls(audio, byId('audio-controls', HTMLElement));
 const canvas = byId('screen', HTMLCanvasElement);
 if (options.nativeResolution) matchCanvasToScreen(canvas);
 const renderer = new Renderer(canvas);
@@ -75,16 +79,20 @@ sendToTelemetry(bus, playloop.telemetry);
 if (options.enabled) {
   exposeDebug(window, bus, () => state, (scale) => {
     frame.markScale = Math.max(0.1, scale);
-  });
+  }, () => audio.inspect());
 }
 
 let lastTime = performance.now();
+document.addEventListener('visibilitychange', () => { lastTime = performance.now(); });
 function tick(now: number): void {
+  if (document.hidden) { lastTime = now; requestAnimationFrame(tick); return; }
   const steps = clock.advance((now - lastTime) / 1000);
   lastTime = now;
   for (let i = 0; i < steps; i++) {
     const result = stepGame(state, latch.take(), TIMING.step, ROOMS);
     state = result.state;
+    audio.setStarted(state.started);
+    for (const cue of result.cues) audio.play(cue);
     for (const event of result.events) bus.publish(event);
   }
   frame.fill(state, roomAt(ROOMS, state.room));

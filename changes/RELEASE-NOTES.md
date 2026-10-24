@@ -1,5 +1,17 @@
 # Release notes
 
+## 0.2.1
+
+### Title
+
+Music and sound
+
+### Body
+
+- Music keeps playing through room retries.
+- Jumps, dashes, ice cuts, refills, and seekers now have sound cues.
+- Adjust music and effects separately under Sound, or press M to mute.
+
 ## 0.2.0
 
 ### Title

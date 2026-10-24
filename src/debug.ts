@@ -27,6 +27,7 @@ export interface DebugHandle {
   readonly events: readonly GameEvent[];
   /** Sets the death-mark flame size (1 as designed), so a recording can sweep it live. */
   readonly setMarkScale: (scale: number) => void;
+  readonly audio: () => unknown;
 }
 
 declare global {
@@ -44,8 +45,9 @@ export function exposeDebug(
   bus: EventBus<GameEvent>,
   state: () => GameState,
   setMarkScale: (scale: number) => void,
+  audio: () => unknown = () => null,
 ): void {
   const events: GameEvent[] = [];
   bus.subscribe((e) => events.push(e));
-  target.cooldown = { state, events, setMarkScale };
+  target.cooldown = { state, events, setMarkScale, audio };
 }

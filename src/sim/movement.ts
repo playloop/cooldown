@@ -6,6 +6,7 @@ export interface ControlResult {
   readonly player: Player;
   /** True on the step a dash begins, so the caller can lay down a new streak. */
   readonly dashStarted: boolean;
+  readonly jumpStarted: boolean;
 }
 
 /** Moves `value` toward `target` by at most `maxDelta`. */
@@ -30,7 +31,7 @@ export function applyControls(p: Player, input: InputFrame, dt: number, diagonal
     const dashTime = Math.max(0, p.dashTime - dt);
     const vx = dashTime > 0 ? p.dashX * DASH.speed : 0;
     const vy = dashTime > 0 ? p.dashY * DASH.speed : 0;
-    return { player: { ...p, vx, vy, dashTime, coyote, jumpBuffer }, dashStarted: false };
+    return { player: { ...p, vx, vy, dashTime, coyote, jumpBuffer }, dashStarted: false, jumpStarted: false };
   }
 
   const facing = axis === 0 ? p.facing : axis;
@@ -54,6 +55,7 @@ export function applyControls(p: Player, input: InputFrame, dt: number, diagonal
         jumpBuffer,
       },
       dashStarted: true,
+      jumpStarted: false,
     };
   }
 
@@ -78,5 +80,6 @@ export function applyControls(p: Player, input: InputFrame, dt: number, diagonal
       jumpBuffer: jumps ? 0 : jumpBuffer,
     },
     dashStarted: false,
+    jumpStarted: jumps,
   };
 }
