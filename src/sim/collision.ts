@@ -42,40 +42,43 @@ export function moveAndCollide(
 function moveX(b: Body, dt: number, solids: readonly Rect[]): Body {
   const minX = PLAYER.halfWidth;
   const maxX = WORLD.width - PLAYER.halfWidth;
-  let x = b.x + b.vx * dt;
-  let vx = b.vx;
-  if (x < minX || x > maxX) {
-    x = Math.min(Math.max(x, minX), maxX);
-    vx = 0;
+  const target = b.x + b.vx * dt;
+  let x = Math.min(Math.max(target, minX), maxX);
+  let blocked = x !== target;
+  // Every solid the target overlaps pushes back against the direction of travel.
+  // Taking the closest stop means the order of `solids` never changes the result.
+  const body = bodyOf({ x, y: b.y });
+  for (const solid of solids) {
+    if (b.vx === 0 || !overlaps(body, solid)) continue;
+    x = b.vx > 0 ? Math.min(x, solid.x - PLAYER.halfWidth) : Math.max(x, right(solid) + PLAYER.halfWidth);
+    blocked = true;
   }
-  for (const s of solids) {
-    if (!overlaps(bodyOf({ x, y: b.y }), s)) continue;
-    x = vx > 0 ? s.x - PLAYER.halfWidth : right(s) + PLAYER.halfWidth;
-    vx = 0;
-  }
-  return { ...b, x, vx };
+  return { ...b, x, vx: blocked ? 0 : b.vx };
 }
 
 function moveY(b: Body, dt: number, solids: readonly Rect[], platforms: readonly Platform[]): Body {
   const feetBefore = feetY(b);
+  const falling = b.vy <= 0;
   let y = b.y + b.vy * dt;
-  let vy = b.vy;
-  for (const s of solids) {
-    if (!overlaps(bodyOf({ x: b.x, y }), s)) continue;
-    y = vy <= 0 ? top(s) + PLAYER.halfHeight : s.y - PLAYER.halfHeight;
-    vy = 0;
+  let blocked = false;
+  // Same rule as moveX: direction from the velocity before the step, closest stop wins.
+  const body = bodyOf({ x: b.x, y });
+  for (const solid of solids) {
+    if (!overlaps(body, solid)) continue;
+    y = falling ? Math.max(y, top(solid) + PLAYER.halfHeight) : Math.min(y, solid.y - PLAYER.halfHeight);
+    blocked = true;
   }
-  if (vy <= 0) {
+  if (falling) {
     const feet = feetY({ y });
-    for (const p of platforms) {
-      const crossed = feetBefore >= p.y - CONTACT && feet < p.y;
-      if (crossed && footprintOver(b.x, p.x0, p.x1)) {
-        y = p.y + PLAYER.halfHeight;
-        vy = 0;
+    for (const platform of platforms) {
+      const crossed = feetBefore >= platform.y - CONTACT && feet < platform.y;
+      if (crossed && footprintOver(b.x, platform.x0, platform.x1)) {
+        y = Math.max(y, platform.y + PLAYER.halfHeight);
+        blocked = true;
       }
     }
   }
-  return { ...b, y, vy };
+  return { ...b, y, vy: blocked ? 0 : b.vy };
 }
 
 /** True when a runner centered at x has some of its width over the range [x0, x1]. */
@@ -91,11 +94,11 @@ export function supportUnder(
 ): Support {
   const feet = feetY(b);
   const onGround = solids.some(
-    (s) => Math.abs(feet - top(s)) <= CONTACT && footprintOver(b.x, s.x, right(s)),
+    (solid) => Math.abs(feet - top(solid)) <= CONTACT && footprintOver(b.x, solid.x, right(solid)),
   );
   if (onGround) return 'ground';
   const onStreak = platforms.some(
-    (p) => Math.abs(feet - p.y) <= CONTACT && footprintOver(b.x, p.x0, p.x1),
+    (platform) => Math.abs(feet - platform.y) <= CONTACT && footprintOver(b.x, platform.x0, platform.x1),
   );
   return onStreak ? 'streak' : null;
 }
