@@ -1,0 +1,13 @@
+# denylist.example: copy to denylist.local (gitignored) and fill in for real.
+#
+# One term or extended-regex pattern per line; lines starting with # are
+# comments. The pre-commit hook and scripts/leak-audit.sh join these with |
+# and grep case-insensitively. List everything that must never appear in
+# this public repo: unreleased codenames, private repo names, client names,
+# internal paths (your home directory), and live-key shapes.
+#
+# NEVER commit the real list: a list of secrets is itself a secret.
+my-unreleased-codename
+my-private-repo-name
+my-client-name
+sk_live_[A-Za-z0-9]+

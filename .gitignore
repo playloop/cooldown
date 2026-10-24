@@ -1,0 +1,8 @@
+node_modules/
+dist/
+coverage/
+*.zip
+.DS_Store
+
+# The real denylist is machine-local: a list of secrets is itself a secret.
+.githooks/denylist.local
