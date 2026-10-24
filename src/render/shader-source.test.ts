@@ -10,6 +10,7 @@ describe('fragmentSource', () => {
 
   it('writes float constants as floats and array sizes as integers', () => {
     expect(source).toContain('#define WORLD_H 18.0');
+    expect(source).toContain('#define PLAYER_HALF_H 0.75');
     expect(source).toContain('#define MAX_SOLIDS 16\n');
   });
 
