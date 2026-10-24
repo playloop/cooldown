@@ -27,7 +27,9 @@ bash scripts/release-check.sh # whole-tree gates, before anything goes public
 ```
 
 Debug URL flags: `?debug` exposes `window.cooldown` (live state plus every
-event), and `?debug&room=2` starts in a given room (0-based).
+event), `?debug&room=2` starts in a given room (0-based), and `?debug&native`
+renders at the screen's real resolution instead of the 1280x720 canvas (for
+recording footage; the camera overlay scales with it).
 
 ## Structure
 

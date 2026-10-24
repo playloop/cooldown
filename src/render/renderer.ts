@@ -24,8 +24,9 @@ const UNIFORMS = [
 
 /**
  * Draws a SceneFrame with one fullscreen fragment shader. It renders at the
- * canvas's own size (fixed in index.html) and lets CSS scale it to the window,
- * which keeps the per-pixel cost the same on a big monitor and a small laptop.
+ * canvas's own size (fixed in index.html; `?debug&native` sizes it to the screen
+ * for recording) and lets CSS scale it to the window, which keeps the per-pixel
+ * cost the same on a big monitor and a small laptop.
  */
 export class Renderer {
   private readonly gl: WebGL2RenderingContext;

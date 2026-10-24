@@ -6,15 +6,20 @@ export interface DebugOptions {
   readonly enabled: boolean;
   /** Start in this room (0-based). Only honored with debug on. */
   readonly startRoom: number;
+  /**
+   * Render at the screen's real pixel size instead of the fixed 1280x720 canvas. Only honored with
+   * debug on: it costs more per frame, so it is for recording footage, not for players.
+   */
+  readonly nativeResolution: boolean;
 }
 
-/** Reads `?debug` and `?room=N` from the page URL. */
+/** Reads `?debug`, `?room=N` and `?native` from the page URL. */
 export function readDebugOptions(search: string, roomCount: number): DebugOptions {
   const params = new URLSearchParams(search);
   const enabled = params.has('debug');
   const asked = Number.parseInt(params.get('room') ?? '', 10);
   const valid = enabled && Number.isInteger(asked) && asked >= 0 && asked < roomCount;
-  return { enabled, startRoom: valid ? asked : 0 };
+  return { enabled, startRoom: valid ? asked : 0, nativeResolution: enabled && params.has('native') };
 }
 
 export interface DebugHandle {

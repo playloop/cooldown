@@ -145,9 +145,15 @@ float burstHeat(float h, vec2 p) {
   return h + (1.0 - age) * step(abs(r), 0.18) * step(fract(turn), 0.25);
 }
 
+// Pixel sizes in the camera effects are written for a 720-pixel-tall canvas; this scales them so
+// the look is the same at any resolution.
+float pixelScale() {
+  return uRes.y / 720.0;
+}
+
 // The camera: scanlines, grain and a vignette.
 vec3 sensor(vec3 col, vec2 uv) {
-  col *= 0.94 + 0.06 * sin(gl_FragCoord.y * 3.14159);
+  col *= 0.94 + 0.06 * sin(gl_FragCoord.y / pixelScale() * 3.14159);
   col += (hash(gl_FragCoord.xy + fract(uTime) * 91.0) - 0.5) * 0.035;
   return col * (1.0 - 0.35 * pow(length(uv - 0.5) * 1.25, 2.5));
 }
@@ -159,8 +165,8 @@ vec3 overlay(vec3 col, vec2 uv) {
   float bracket = min(sdSegment(c, e, e - vec2(0.06, 0.0)), sdSegment(c, e, e - vec2(0.0, 0.06)));
   col = mix(col, vec3(0.92), smoothstep(0.0022, 0.0008, bracket));
   // Kept high on the screen, above every exit, so it never covers the doorway.
-  vec2 bar = gl_FragCoord.xy - vec2(uRes.x - 44.0, uRes.y * 0.68);
-  if (abs(bar.x) < 6.0 && bar.y > 0.0 && bar.y < uRes.y * 0.2) col = inferno(bar.y / (uRes.y * 0.2));
+  vec2 bar = gl_FragCoord.xy - vec2(uRes.x - 44.0 * pixelScale(), uRes.y * 0.68);
+  if (abs(bar.x) < 6.0 * pixelScale() && bar.y > 0.0 && bar.y < uRes.y * 0.2) col = inferno(bar.y / (uRes.y * 0.2));
   return col;
 }
 

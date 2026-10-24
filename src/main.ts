@@ -21,13 +21,26 @@ function byId<T extends HTMLElement>(id: string, type: new () => T): T {
   return el;
 }
 
+/** Sizes the canvas's pixels to its on-screen size, so nothing is scaled up (the `?native` flag). */
+function matchCanvasToScreen(target: HTMLCanvasElement): void {
+  const fit = (): void => {
+    const box = target.getBoundingClientRect();
+    target.width = Math.round(box.width * devicePixelRatio);
+    target.height = Math.round(box.height * devicePixelRatio);
+  };
+  fit();
+  window.addEventListener('resize', fit);
+}
+
 // The composition root: the only place that knows about every part. Each part
 // below can be swapped or tested without the others.
 const options = readDebugOptions(location.search, ROOMS.length);
 const latch = new InputLatch();
 bindKeyboard(window, latch);
 const bus = new EventBus<GameEvent>();
-const renderer = new Renderer(byId('screen', HTMLCanvasElement));
+const canvas = byId('screen', HTMLCanvasElement);
+if (options.nativeResolution) matchCanvasToScreen(canvas);
+const renderer = new Renderer(canvas);
 const frame = new SceneFrame();
 const hud = new Hud(
   {
