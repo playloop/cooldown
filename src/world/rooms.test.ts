@@ -62,7 +62,8 @@ function clearRate(index: number): number {
   return wins / total;
 }
 
-describe('difficulty', () => {
+// Each grid replays about a thousand attempts (around a second), so give it headroom on a busy machine.
+describe('difficulty', { timeout: 20_000 }, () => {
   it('makes the gap deliberately too hard: possible, but with a tiny timing window', () => {
     const gap = clearRate(2);
     expect(gap).toBeGreaterThan(0);
