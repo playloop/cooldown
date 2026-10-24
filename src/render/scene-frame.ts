@@ -38,6 +38,8 @@ export class SceneFrame {
   /** Per mark: x, y, warmth, unused. */
   readonly marks = new Float32Array(LIMITS.marks * 4);
   markCount = 0;
+  /** Size of the death-mark flames, 1 as designed. Only debug changes it (to sweep it on video). */
+  markScale = 1;
   /** x, y, facing, dash glow (1 at the start of a dash, 0 when not dashing). */
   readonly player = new Float32Array(4);
   playerVisible = 1;

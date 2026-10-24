@@ -16,6 +16,7 @@ uniform vec2 uStreakHeat[MAX_STREAKS];
 uniform int uStreakCount;
 uniform vec4 uMarks[MAX_MARKS];
 uniform int uMarkCount;
+uniform float uMarkScale;
 uniform vec4 uPlayer;
 uniform float uPlayerVisible;
 uniform float uStride;
@@ -105,7 +106,8 @@ float sdFlame(vec2 q, float phase) {
 // Body heat left where you died before in this room, burning as a small flame.
 float markHeat(float h, vec2 p, float px) {
   for (int i = 0; i < uMarkCount; i++) {
-    float d = sdFlame(p - uMarks[i].xy, hash(uMarks[i].xy) * 6.2831853);
+    // Scaling a distance field: evaluate in the shrunk space, then scale the distance back up.
+    float d = sdFlame((p - uMarks[i].xy) / uMarkScale, hash(uMarks[i].xy) * 6.2831853) * uMarkScale;
     // A hotter inner flame inside the outer one, and a soft glow around both.
     h += uMarks[i].z * (0.2 * fill(d, px) + 0.14 * fill(d + 0.08, px) + 0.12 * exp(-max(d, 0.0) * 5.0));
   }

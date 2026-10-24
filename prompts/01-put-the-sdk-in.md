@@ -76,4 +76,5 @@ These landed during the episode without a prompt on screen. They are in
 - `47e3538` makes built copies report the `production` environment and the
   build version, so real players' sessions from the itch.io build show up in
   Playloop's build and fix-first reads (the SDK defaults to `dev`).
-
+- `cooldown.setMarkScale()` (debug only) sets the flame size while the game
+  runs, so the video can sweep it. Players never see it.

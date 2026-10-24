@@ -70,7 +70,11 @@ const playloop = new Playloop({
 playloop.telemetry.startSession({ runner: 'browser', gameVersion: __BUILD_VERSION__ });
 playloop.telemetry.autoBatch();
 sendToTelemetry(bus, playloop.telemetry);
-if (options.enabled) exposeDebug(window, bus, () => state);
+if (options.enabled) {
+  exposeDebug(window, bus, () => state, (scale) => {
+    frame.markScale = Math.max(0.1, scale);
+  });
+}
 
 let lastTime = performance.now();
 function tick(now: number): void {

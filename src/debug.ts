@@ -25,6 +25,8 @@ export function readDebugOptions(search: string, roomCount: number): DebugOption
 export interface DebugHandle {
   readonly state: () => GameState;
   readonly events: readonly GameEvent[];
+  /** Sets the death-mark flame size (1 as designed), so a recording can sweep it live. */
+  readonly setMarkScale: (scale: number) => void;
 }
 
 declare global {
@@ -37,8 +39,13 @@ declare global {
  * With `?debug`, exposes the live state and every event as `window.cooldown`,
  * so a browser test (or you, in the console) can see what the game sees.
  */
-export function exposeDebug(target: Window, bus: EventBus<GameEvent>, state: () => GameState): void {
+export function exposeDebug(
+  target: Window,
+  bus: EventBus<GameEvent>,
+  state: () => GameState,
+  setMarkScale: (scale: number) => void,
+): void {
   const events: GameEvent[] = [];
   bus.subscribe((e) => events.push(e));
-  target.cooldown = { state, events };
+  target.cooldown = { state, events, setMarkScale };
 }

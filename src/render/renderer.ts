@@ -15,6 +15,7 @@ const UNIFORMS = [
   'uStreakCount',
   'uMarks',
   'uMarkCount',
+  'uMarkScale',
   'uPlayer',
   'uPlayerVisible',
   'uStride',
@@ -58,6 +59,7 @@ export class Renderer {
     gl.uniform1i(u.uStreakCount, frame.streakCount);
     gl.uniform4fv(u.uMarks, frame.marks);
     gl.uniform1i(u.uMarkCount, frame.markCount);
+    gl.uniform1f(u.uMarkScale, frame.markScale);
     gl.uniform4fv(u.uPlayer, frame.player);
     gl.uniform1f(u.uPlayerVisible, frame.playerVisible);
     gl.uniform1f(u.uStride, frame.stride);
