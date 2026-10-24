@@ -92,10 +92,22 @@ float exitHeat(float h, vec2 p, float px) {
   return h + 0.2 * exp(-abs(d) * 6.0);
 }
 
-// Body heat left where you died before in this room.
-float markHeat(float h, vec2 p) {
+// A small flame: a round bulb melted into an upward tip. Local space: the bulb
+// center at the origin. The tip height and lean flicker slowly, out of step per mark.
+float sdFlame(vec2 q, float phase) {
+  float top = 0.62 * (0.88 + 0.08 * sin(uTime * 1.7 + phase) + 0.04 * sin(uTime * 2.9 + phase * 1.3));
+  q.x -= 0.07 * sin(uTime * 1.1 + phase) * clamp(q.y / top, 0.0, 1.0);
+  float bulb = sdCircle(q, 0.2);
+  float tip = sdTriangleIsosceles(vec2(q.x, top - q.y), vec2(0.18, top));
+  return smin(bulb, tip, 0.12);
+}
+
+// Body heat left where you died before in this room, burning as a small flame.
+float markHeat(float h, vec2 p, float px) {
   for (int i = 0; i < uMarkCount; i++) {
-    h += uMarks[i].z * 0.32 * exp(-length((p - uMarks[i].xy) * vec2(1.0, 1.6)) * 2.4);
+    float d = sdFlame(p - uMarks[i].xy, hash(uMarks[i].xy) * 6.2831853);
+    // A hotter inner flame inside the outer one, and a soft glow around both.
+    h += uMarks[i].z * (0.2 * fill(d, px) + 0.14 * fill(d + 0.08, px) + 0.12 * exp(-max(d, 0.0) * 5.0));
   }
   return h;
 }
@@ -178,7 +190,7 @@ void main() {
   h = groundHeat(h, p, px);
   h = spikeHeat(h, p, px);
   h = exitHeat(h, p, px);
-  h = markHeat(h, p);
+  h = markHeat(h, p, px);
   h = streakHeat(h, p, px);
   if (uPlayerVisible > 0.5) h = runnerHeat(h, p, px);
   if (uBurst.w > 0.5) h = burstHeat(h, p);
