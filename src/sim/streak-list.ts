@@ -7,6 +7,7 @@ import { extendStreak, isCold, solidSpan, startStreak, type Streak } from './str
  * Keeps the list of live streaks in step with the runner: a new streak when a
  * dash starts, the newest one stretched while the dash runs, cold ones dropped.
  * `before` is the runner at the start of the step and `after` at the end.
+ * `lifetime` is stamped on any streak born this step.
  */
 export function updateStreaks(
   streaks: readonly Streak[],
@@ -14,10 +15,11 @@ export function updateStreaks(
   after: Player,
   dashStarted: boolean,
   now: number,
+  lifetime: number,
 ): readonly Streak[] {
-  let next = dashStarted ? [...streaks, startStreak(before.x, feetY(before), now)] : streaks;
+  let next = dashStarted ? [...streaks, startStreak(before.x, feetY(before), now, lifetime)] : streaks;
   if (dashStarted || isDashing(before)) next = stretchNewest(next, after.x, now);
-  return next.filter((s) => !isCold(s, now, STREAK.lifetime)).slice(-STREAK.maxAlive);
+  return next.filter((streak) => !isCold(streak, now)).slice(-STREAK.maxAlive);
 }
 
 function stretchNewest(streaks: readonly Streak[], x: number, now: number): readonly Streak[] {
@@ -29,9 +31,9 @@ function stretchNewest(streaks: readonly Streak[], x: number, now: number): read
 /** The still-solid part of every streak, as surfaces the runner can stand on. */
 export function platformsOf(streaks: readonly Streak[], now: number): readonly Platform[] {
   const out: Platform[] = [];
-  for (const s of streaks) {
-    const span = solidSpan(s, now, STREAK.lifetime);
-    if (span !== null) out.push({ ...span, y: s.y });
+  for (const streak of streaks) {
+    const span = solidSpan(streak, now);
+    if (span !== null) out.push({ ...span, y: streak.y });
   }
   return out;
 }

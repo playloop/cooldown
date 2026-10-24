@@ -34,12 +34,18 @@ describe('SceneFrame', () => {
   });
 
   it('sends each streak with its heat at both ends', () => {
-    const streak = extendStreak(startStreak(4, 5, 0), 8, 0.2);
+    const streak = extendStreak(startStreak(4, 5, 0, 1), 8, 0.2);
     const frame = filled({ ...newGame([room]), clock: 0.2, streaks: [streak] });
     expect(frame.streakCount).toBe(1);
     expect(Array.from(frame.streaks.slice(0, 3))).toEqual([4, 8, 5]);
     expect(frame.streakHeat[1]).toBeCloseTo(1);
     expect(frame.streakHeat[0]).toBeLessThan(1);
+  });
+
+  it('uses the lifetime each streak was born with, the same one the sim uses', () => {
+    const slow = extendStreak(startStreak(4, 5, 0, 2), 8, 0.2);
+    const frame = filled({ ...newGame([room]), clock: 1.2, streaks: [slow] });
+    expect(frame.streakHeat[1]).toBeCloseTo(0.5);
   });
 
   it('draws only this room\'s deaths, newest warmest', () => {

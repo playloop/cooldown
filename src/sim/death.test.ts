@@ -46,7 +46,7 @@ describe('deathCheck', () => {
 
 describe('droppedByCooling', () => {
   // A streak at height 5 from x 4 to 8.
-  const streak = extendStreak(startStreak(4, 5, 0), 8, 0.2);
+  const streak = extendStreak(startStreak(4, 5, 0, 1), 8, 0.2);
   const standing = at(6, 5, { support: 'streak' });
 
   it('is true when the streak cooled away under the feet', () => {

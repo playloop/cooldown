@@ -1,4 +1,4 @@
-import { DEATH } from '../config';
+import { DEATH, STREAK } from '../config';
 import { overlaps } from '../core/rect';
 import type { GameEvent } from '../events/game-events';
 import type { Point, Room } from '../world/room';
@@ -104,7 +104,7 @@ function stepPlaying(
       ? false
       : before.droppedByCooling || droppedByCooling(before, afterMove, s.streaks),
   };
-  s = { ...s, player, streaks: updateStreaks(s.streaks, before, player, dashStarted, s.clock) };
+  s = { ...s, player, streaks: updateStreaks(s.streaks, before, player, dashStarted, s.clock, STREAK.lifetime) };
 
   const cause = deathCheck(player, room);
   if (cause !== null) return die(s, cause, events);

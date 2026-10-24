@@ -68,9 +68,9 @@ export class SceneFrame {
   }
 
   private packStreaks(state: GameState): void {
-    state.streaks.forEach((s, i) => {
-      this.streaks.set([s.startX, s.endX, s.y, 0], i * 4);
-      this.streakHeat.set(endHeats(s, state.clock, STREAK.lifetime), i * 2);
+    state.streaks.forEach((streak, i) => {
+      this.streaks.set([streak.startX, streak.endX, streak.y, 0], i * 4);
+      this.streakHeat.set(endHeats(streak, state.clock), i * 2);
     });
     this.streakCount = state.streaks.length;
   }
